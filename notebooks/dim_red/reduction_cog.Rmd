@@ -14,6 +14,7 @@ library(lavaan)
 library(semPlot)
 library(factoextra)
 source('functions/explained_variance.R')
+source('functions/heatmaps.custom.R')
 ```
 
 # Load Data
@@ -48,6 +49,12 @@ labels = c("vnr", "vismem", "rt","promem","g")
 semPaths(g_cfa,what="std",fade=FALSE,nodeLabels=labels,edge.label.cex=1,sizeMan=5,edge.color="black",
          curve=2,mar=c(10,5,5,5),
          filetype='png',filename="figures/dim_red/g")
+```
+
+```{r}
+cog.cor = cor(cog.merged)
+heatmap.with.labels(cog.cor)
+ggsave('figures/dim_red/cog_cor.png')
 ```
 
 ```{r}

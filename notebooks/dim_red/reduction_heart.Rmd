@@ -15,7 +15,9 @@ library(lavaan)
 library(semPlot)
 library(paran)
 library(factoextra)
+library(RColorBrewer)
 source('functions/explained_variance.R')
+source('functions/heatmaps.custom.R')
 ```
 
 # Load Data
@@ -54,6 +56,17 @@ write.csv(heart.latents, 'data_derived/dim_red/latents_heart.csv',row.names = FA
 ```{r}
 write.csv(heart.pca$rotation[,1:3],"tables/dim_red/heart.pca.loadings.csv")
 ```
+
+```{r}
+heart.cor = cor(merged.heart)
+heart.groups = sapply(colnames(merged.heart),function(x) strsplit(x,'_')[[1]][2])
+heart.groups = factor(heart.groups, levels = c("shape","intensity","texture"))
+group.numbers <- as.numeric(heart.groups)
+side.colors <- brewer.pal(9, "Set1")[group.numbers]
+heatmap.with.tree(heart.cor,heart.groups,side.colors)
+ggsave('figures/dim_red/cor_heart.png')
+```
+
 
 ```{r}
 heart.scaled = scale(merged.heart)

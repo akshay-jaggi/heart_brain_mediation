@@ -12,12 +12,15 @@ knitr::opts_knit$set(root.dir = normalizePath("../.."))
 ```{r}
 library(lavaan)
 library(semPlot)
+library(factoextra)
+source('functions/heatmaps.custom.R')
 ```
 
 # Load Data
 ```{r}
 merged.data.complete = read.csv('data_derived/merged/vrf.cog.heart.brain.trad.healthy.csv')
 merged.data.complete.new = read.csv('data_derived/merged/vrf.cog.heart.brain.new.healthy.csv')
+tract.names = read.csv('data/tract.names.csv')
 ```
 
 # Brain Factor Analysis
@@ -54,6 +57,13 @@ fitMeasures(gMD_cfa, c("cfi","tli","rmsea","srmr"))
 write.csv(standardizedSolution(gMD_cfa),"tables/dim_red/gmd_cfa.csv")
 ```
 
+```{r}
+brain.md.cor = cor(merged.brain.md[,order(colnames(merged.brain.md))])
+colnames(brain.md.cor) = as.character(tract.names$name)
+heatmap.with.labels(brain.md.cor)
+ggsave('figures/dim_red/md_cor.png')
+```
+
 ## gFA 
 ```{r}
 merged.brain.fa = merged.data.complete[,grepl("brain_",colnames(merged.data.complete))&
@@ -88,13 +98,11 @@ write.csv(standardizedSolution(gfa_cfa),"tables/dim_red/gfa_cfa.csv")
 ```
 
 ```{r}
-brain.latents = data.frame('f.eid'=merged.data.complete$f.eid)
-brain.latents$brain_latent_grey = merged.data.complete$brain_grey
-brain.latents$brain_latent_atrophy = merged.data.complete$brain_atrophy
-brain.latents$brain_latent_gMD = predict(gMD_cfa)
-brain.latents$brain_latent_gFA = predict(gfa_cfa)
+brain.fa.cor = cor(merged.brain.fa[,order(colnames(merged.brain.fa))])
+colnames(brain.fa.cor) = as.character(tract.names$name)
+heatmap.with.labels(brain.fa.cor)
+ggsave('figures/dim_red/fa_cor.png')
 ```
-
 
 # Brain PCA
 
@@ -114,6 +122,29 @@ dev.off()
 ```
 
 ```{r}
+write.csv(brain.pca$rotation[,1:3],"tables/dim_red/brain.pca.loadings.csv")
+```
+
+```{r}
+brain.cor = cor(merged.brain.new)
+brain.groups = sapply(colnames(merged.brain.new),function(x) strsplit(x,'_')[[1]][3])
+brain.groups[grepl('volume',colnames(merged.brain.new))] = 'volume'
+brain.groups = factor(brain.groups)
+group.numbers <- as.numeric(brain.groups)
+side.colors <- brewer.pal(10, "Set3")[group.numbers]
+heatmap.with.tree(brain.cor,brain.groups,side.colors)
+ggsave('figures/dim_red/cor_brain.png')
+```
+
+
+# Save Latents
+
+```{r}
+brain.latents = data.frame('f.eid'=merged.data.complete$f.eid)
+brain.latents$brain_latent_grey = merged.data.complete$brain_grey
+brain.latents$brain_latent_atrophy = merged.data.complete$brain_atrophy
+brain.latents$brain_latent_gMD = predict(gMD_cfa)
+brain.latents$brain_latent_gFA = predict(gfa_cfa)
 brain.latents$brain_latent_pc1 = brain.pca$x[,1]
 brain.latents$brain_latent_pc2 = brain.pca$x[,2]
 brain.latents$brain_latent_pc3 = brain.pca$x[,3]
@@ -123,6 +154,4 @@ brain.latents$brain_latent_pc3 = brain.pca$x[,3]
 write.csv(brain.latents, 'data_derived/dim_red/latents_brain.csv',row.names = FALSE)
 ```
 
-```{r}
-write.csv(brain.pca$rotation[,1:3],"tables/dim_red/brain.pca.loadings.csv")
-```
+

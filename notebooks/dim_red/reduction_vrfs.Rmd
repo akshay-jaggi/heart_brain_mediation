@@ -13,6 +13,7 @@ knitr::opts_knit$set(root.dir = normalizePath("../.."))
 library(lavaan)
 library(semPlot)
 source('functions/explained_variance.R')
+source('functions/heatmaps.custom.R')
 ```
 
 # Load Data
@@ -67,12 +68,13 @@ fitMeasures(gvrf_cfa, c("cfi","tli","rmsea","srmr"))
 
 
 
-# Save
+# Save SEM Paramters
 
 ```{r}
 write.csv(standardizedSolution(gvrf_cfa),"tables/dim_red/gvrf_cfa.csv")
 ```
 
+# Path Diagram
 ```{r}
 labels = c("hyptens", "pck_yrs", "sbp","dbp","dbts","hypchol","bmi","whr","gvrf")
 semPaths(gvrf_cfa,what="std",fade=FALSE,nodeLabels=labels,edge.label.cex=1,sizeMan=5,edge.color="black",
@@ -80,6 +82,14 @@ semPaths(gvrf_cfa,what="std",fade=FALSE,nodeLabels=labels,edge.label.cex=1,sizeM
          filetype='png',filename="figures/dim_red/gvrf")
 ```
 
+# Heatmap
+```{r}
+vrfs.cor = cor(vrfs.merged)
+heatmap.with.labels(vrfs.cor)
+ggsave('figures/dim_red/vrf_cor.png')
+```
+
+# Save Latents
 ```{r}
 vrfs.aggregate$cardio_gvrf = predict(gvrf_cfa)
 ```
@@ -92,7 +102,5 @@ colnames(vrfs.tosave) = c('f.eid','cardio_latent_agg','cardio_latent_gvrf')
 write.csv(vrfs.tosave,'data_derived/dim_red/latents_vrf.csv',row.names = FALSE)
 ```
 
-```{r}
-evr(vrfs.merged, scale(vrfs.tosave[,2,drop=F]))
-```
+
 
