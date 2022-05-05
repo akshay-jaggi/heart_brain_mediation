@@ -51,3 +51,7 @@ rsconnect/
 # Data
 data/
 data_derived/
+
+# R Things
+*.Rproj
+*.html
