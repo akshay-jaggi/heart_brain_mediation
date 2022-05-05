@@ -1,0 +1,128 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+# Set Up
+```{r setup}
+knitr::opts_knit$set(root.dir = normalizePath("../.."))
+```
+
+# Imports
+```{r}
+library(lavaan)
+library(semPlot)
+```
+
+# Load Data
+```{r}
+merged.data.complete = read.csv('data_derived/merged/vrf.cog.heart.brain.trad.healthy.csv')
+merged.data.complete.new = read.csv('data_derived/merged/vrf.cog.heart.brain.new.healthy.csv')
+```
+
+# Brain Factor Analysis
+## gMD 
+```{r}
+merged.brain.md = merged.data.complete[,grepl("brain_",colnames(merged.data.complete))&
+                                        grepl("mean_md",colnames(merged.data.complete))]
+merged.brain.md = scale(data.frame(lapply(merged.brain.md,as.numeric)))
+ordered_tracts = colnames(merged.brain.md)[order(colnames(merged.brain.md))]
+gMD = paste(c("gMD=~",ordered_tracts),collapse="+")
+```
+
+```{r}
+md.covariances = character(length(ordered_tracts)/2)
+for(i in seq(1,length(ordered_tracts)/2)) {
+  md.covariances[i] = paste(ordered_tracts[2*i-1],ordered_tracts[2*i],sep="~~")
+}
+md.covariances = md.covariances[!grepl("forceps",md.covariances)]
+tract_grid = expand.grid(ordered_tracts[grep("inferior",ordered_tracts)],ordered_tracts[grep("inferior",ordered_tracts)])
+more.covariances = paste(tract_grid[1:8,]$Var1,tract_grid[1:8,]$Var2,sep="~~")[3:6]
+md.covariances = paste(c(md.covariances,more.covariances),collapse="\n")
+```
+
+```{r}
+gMD_cfa_input = paste(c(gMD,md.covariances),collapse="\n")
+gMD_cfa = cfa(gMD_cfa_input, merged.brain.md)
+```
+
+```{r}
+fitMeasures(gMD_cfa, c("cfi","tli","rmsea","srmr"))
+```
+
+```{r}
+write.csv(standardizedSolution(gMD_cfa),"tables/dim_red/gmd_cfa.csv")
+```
+
+## gFA 
+```{r}
+merged.brain.fa = merged.data.complete[,grepl("brain_",colnames(merged.data.complete))&
+                                        grepl("mean_fa",colnames(merged.data.complete))]
+merged.brain.fa = scale(data.frame(lapply(merged.brain.fa,as.numeric)))
+ordered_tracts = colnames(merged.brain.fa)[order(colnames(merged.brain.fa))]
+gfa = paste(c("gfa=~",ordered_tracts),collapse="+")
+```
+
+```{r}
+fa.covariances = character(length(ordered_tracts)/2)
+
+for(i in seq(1,length(ordered_tracts)/2)) {
+  fa.covariances[i] = paste(ordered_tracts[2*i-1],ordered_tracts[2*i],sep="~~")
+}
+tract_grid = expand.grid(ordered_tracts[grep("inferior",ordered_tracts)],ordered_tracts[grep("inferior",ordered_tracts)])
+more.covariances = paste(tract_grid[1:8,]$Var1,tract_grid[1:8,]$Var2,sep="~~")[3:6]
+fa.covariances = paste(c(fa.covariances,more.covariances),collapse="\n")
+```
+
+```{r}
+gfa_cfa_input = paste(c(gfa,fa.covariances),collapse="\n")
+gfa_cfa = cfa(gfa_cfa_input, merged.brain.fa)
+```
+
+```{r}
+fitMeasures(gfa_cfa, c("cfi","tli","rmsea","srmr"))
+```
+
+```{r}
+write.csv(standardizedSolution(gfa_cfa),"tables/dim_red/gfa_cfa.csv")
+```
+
+```{r}
+brain.latents = data.frame('f.eid'=merged.data.complete$f.eid)
+brain.latents$brain_latent_grey = merged.data.complete$brain_grey
+brain.latents$brain_latent_atrophy = merged.data.complete$brain_atrophy
+brain.latents$brain_latent_gMD = predict(gMD_cfa)
+brain.latents$brain_latent_gFA = predict(gfa_cfa)
+```
+
+
+# Brain PCA
+
+```{r}
+merged.brain.new = merged.data.complete.new[,grepl("brain_",colnames(merged.data.complete.new))]
+```
+
+```{r}
+brain.pca = prcomp(merged.brain.new, center = TRUE, scale = TRUE)
+brain.variances = summary(brain.pca)$importance
+```
+
+```{r}
+png("figures/dim_red/brain.eigs.png")
+fviz_eig(brain.pca,ncp=10) 
+dev.off()
+```
+
+```{r}
+brain.latents$brain_latent_pc1 = brain.pca$x[,1]
+brain.latents$brain_latent_pc2 = brain.pca$x[,2]
+brain.latents$brain_latent_pc3 = brain.pca$x[,3]
+```
+
+```{r}
+write.csv(brain.latents, 'data_derived/dim_red/latents_brain.csv',row.names = FALSE)
+```
+
+```{r}
+write.csv(brain.pca$rotation[,1:3],"tables/dim_red/brain.pca.loadings.csv")
+```

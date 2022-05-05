@@ -1,0 +1,97 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+# Set Up
+```{r setup}
+knitr::opts_knit$set(root.dir = normalizePath("../.."))
+```
+
+# Imports
+```{r}
+library(finalfit)
+library(mice)
+library(purrr)
+library(dplyr)
+```
+
+# Load Data
+```{r}
+covs.final = read.csv('data_derived/cleaned/covs_cleaned.csv')
+vrfs.final = read.csv('data_derived/cleaned/vrfs_cleaned.csv')
+cog.final = read.csv('data_derived/cleaned/cog_cleaned.csv')
+heart.final = read.csv('data_derived/cleaned/heart_cleaned.csv')
+brain.trad.final = read.csv('data_derived/cleaned/brain_trad_cleaned.csv')
+brain.new.final = read.csv('data_derived/cleaned/brain_new_cleaned.csv')
+```
+
+# Prep New Colnames
+```{r}
+all.data.trad = 
+  list(vrfs.final, cog.final, heart.final, brain.trad.final, covs.final)
+all.data.new = 
+  list(vrfs.final, cog.final, heart.final, brain.new.final, covs.final)
+tags = c("cardio","cog","heart","brain","covs")
+```
+
+```{r}
+counter = 1
+tagged.trad = list()
+for(frame in all.data.trad[1:(length(all.data.trad)-1)]) {
+  frame = frame %>% relocate(f.eid, .after = last_col())
+  colnames(frame)[1:ncol(frame)-1] =
+    paste(tags[counter],colnames(frame)[1:ncol(frame)-1],sep="_")
+  tagged.trad[[counter]] = frame
+  counter = counter + 1
+}
+tagged.trad[[counter]] = all.data.trad[[counter]]
+```
+
+```{r}
+counter = 1
+tagged.new = list()
+for(frame in all.data.new[1:(length(all.data.new)-1)]) {
+  frame = frame %>% relocate(f.eid, .after = last_col())
+  colnames(frame)[1:ncol(frame)-1] =
+    paste(tags[counter],colnames(frame)[1:ncol(frame)-1],sep="_")
+  tagged.new[[counter]] = frame
+  counter = counter + 1
+}
+tagged.new[[counter]] = all.data.new[[counter]]
+```
+
+# Trad Data Merger
+```{r}
+merged.trad = tagged.trad %>% 
+  purrr::reduce(inner_join,by="f.eid")
+merged.trad = merged.trad %>% 
+  dplyr::select(f.eid, everything())
+```
+
+
+# New Data Merger
+```{r}
+merged.new = tagged.new %>% 
+  purrr::reduce(inner_join,by="f.eid")
+merged.new = merged.new %>% 
+  dplyr::select(f.eid, everything())
+```
+
+# Save
+```{r}
+write.csv(merged.trad,'data_derived/merged/vrf.cog.heart.brain.trad.csv', row.names = FALSE)
+write.csv(merged.new,'data_derived/merged/vrf.cog.heart.brain.new.csv', row.names = FALSE)
+```
+
+# Filter for Healthy
+```{r}
+merged.trad.healthy = merged.trad[merged.trad$cov_nosevere,]
+merged.new.healthy = merged.new[merged.new$cov_nosevere,]
+```
+
+```{r}
+write.csv(merged.trad.healthy,
+          'data_derived/merged/vrf.cog.heart.brain.trad.healthy.csv', row.names = FALSE)
+write.csv(merged.new.healthy,
+          'data_derived/merged/vrf.cog.heart.brain.new.healthy.csv', row.names = FALSE)
+```

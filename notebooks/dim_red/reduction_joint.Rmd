@@ -1,0 +1,96 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+# Set Up
+```{r setup}
+knitr::opts_knit$set(root.dir = normalizePath("../.."))
+```
+
+# Imports
+```{r}
+library(candisc)
+library(ggplot2)
+library(dplyr)
+source('functions/explained_variance.R')
+```
+
+# Load Data
+```{r}
+merged.data.complete.new = read.csv('data_derived/merged/vrf.cog.heart.brain.new.healthy.csv')
+```
+
+```{r}
+merged.heart = merged.data.complete.new[,grepl("heart_",colnames(merged.data.complete.new))]
+merged.brain = merged.data.complete.new[,grepl("brain_",colnames(merged.data.complete.new))]
+```
+
+```{r}
+merged.heart.zscore = data.frame(scale(merged.heart))
+merged.brain.zscore = data.frame(scale(merged.brain))
+```
+
+```{r}
+write.csv(merged.brain.zscore,'data_derived/dim_red/brain.csv',row.names = FALSE)
+write.csv(merged.heart.zscore,'data_derived/dim_red/heart.csv',row.names = FALSE)
+```
+
+# CCA Performed in Sklearn
+```{r}
+brain.ccs = read.csv('data_derived/dim_red/brain_ccs.csv',row.names = 1)
+heart.ccs = read.csv('data_derived/dim_red/heart_ccs.csv',row.names = 1)
+```
+
+```{r}
+cancors = diag(cor(heart.ccs, brain.ccs))
+```
+
+```{r}
+ggplot() + 
+  geom_line(aes(x=seq(1,10),y=cancors)) + 
+  theme_classic() + labs(y='Canonical Correlation', x='Covariate Number') + 
+  scale_x_continuous(breaks=seq(1,10,1))
+ggsave('figures/dim_red/cca.cors.png')
+```
+
+
+```{r}
+heart.scores = data.frame(cor(merged.heart.zscore, heart.ccs))
+brain.scores = data.frame(cor(merged.brain.zscore, brain.ccs))
+```
+
+```{r}
+write.csv(heart.scores,'tables/dim_red/heart.cca.scores.csv')
+write.csv(brain.scores,'tables/dim_red/brain.cca.scores.csv')
+```
+
+```{r}
+brain.ccs$f.eid = merged.data.complete.new$f.eid
+heart.ccs$f.eid = merged.data.complete.new$f.eid
+brain.ccs = brain.ccs %>% select(f.eid, everything())
+heart.ccs = heart.ccs %>% select(f.eid, everything())
+```
+
+```{r}
+colnames(heart.ccs) = c('f.eid',paste('heart_latent_cc',seq(1,10),sep=''))
+colnames(brain.ccs) = c('f.eid',paste('brain_latent_cc',seq(1,10),sep=''))
+```
+
+
+```{r}
+write.csv(brain.ccs,'data_derived/dim_red/latents_brain_ccs.csv',row.names = FALSE)
+write.csv(heart.ccs,'data_derived/dim_red/latents_heart_ccs.csv',row.names = FALSE)
+```
+
+```{r}
+evr_nonorth(merged.heart.zscore, heart.ccs[,2:ncol(heart.ccs)])
+```
+
+```{r}
+evr_orth(merged.heart.zscore, heart.ccs[,2:ncol(heart.ccs)])
+```
+
+```{r}
+evr_orth(merged.brain.zscore, brain.ccs[,2:ncol(brain.ccs)])
+```

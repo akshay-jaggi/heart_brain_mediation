@@ -1,0 +1,98 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+# Set Up
+```{r setup}
+knitr::opts_knit$set(root.dir = normalizePath("../.."))
+```
+
+# Imports
+```{r}
+library(lavaan)
+library(semPlot)
+source('functions/explained_variance.R')
+```
+
+# Load Data
+```{r}
+vrf.cog.heart.brain.trad = read.csv('data_derived/merged/vrf.cog.heart.brain.trad.healthy.csv')
+```
+
+```{r}
+vrfs.merged = vrf.cog.heart.brain.trad[,grep("cardio_",colnames(vrf.cog.heart.brain.trad))]
+```
+
+# Additive Vascular Risk
+```{r}
+vrfs.aggregate = vrfs.merged
+vrfs.aggregate$smoked = vrfs.aggregate$cardio_pack_years > 0 
+vrfs.aggregate$high_bmi = vrfs.aggregate$cardio_bmi > 25
+vrfs.aggregate$high_whr = (vrf.cog.heart.brain.trad$cov_sex & vrfs.aggregate$cardio_whr > 0.9) | 
+  (!vrf.cog.heart.brain.trad$cov_sex & vrfs.aggregate$cardio_whr > 0.85)
+```
+
+```{r}
+vrfs.aggregate$cardio_agg = rowSums(vrfs.aggregate[,c('cardio_hypertension','cardio_hyperchol','cardio_diabetes',
+                                  'smoked','high_bmi', 'high_whr')])
+```
+
+```{r}
+hist(vrfs.aggregate$cardio_agg)
+```
+
+
+# gVRF
+
+```{r}
+gvrf = paste("gvrf=~",paste(colnames(vrfs.merged),collapse="+"),sep='')
+cardio_covariances = 
+"cardio_hypertension ~~ cardio_diabetes
+cardio_diabetes ~~ cardio_whr
+cardio_hypertension ~~ cardio_whr 
+cardio_dbp ~~ cardio_sbp
+cardio_hypertension ~~ cardio_dbp
+cardio_hypertension ~~ cardio_sbp
+cardio_hypertension ~~ cardio_hyperchol
+cardio_dbp ~~ cardio_bmi
+"
+cardio_cfa_input = paste(c(gvrf,cardio_covariances),collapse="\n")
+gvrf_cfa = cfa(cardio_cfa_input, vrfs.merged)
+```
+
+```{r}
+fitMeasures(gvrf_cfa, c("cfi","tli","rmsea","srmr"))
+```
+
+
+
+# Save
+
+```{r}
+write.csv(standardizedSolution(gvrf_cfa),"tables/dim_red/gvrf_cfa.csv")
+```
+
+```{r}
+labels = c("hyptens", "pck_yrs", "sbp","dbp","dbts","hypchol","bmi","whr","gvrf")
+semPaths(gvrf_cfa,what="std",fade=FALSE,nodeLabels=labels,edge.label.cex=1,sizeMan=5,edge.color="black",
+         curve=2,mar=c(10,5,5,5), width= 6, height =4,
+         filetype='png',filename="figures/dim_red/gvrf")
+```
+
+```{r}
+vrfs.aggregate$cardio_gvrf = predict(gvrf_cfa)
+```
+
+```{r}
+vrfs.tosave = data.frame(vrf.cog.heart.brain.trad$f.eid,
+                         vrfs.aggregate$cardio_agg,
+                         vrfs.aggregate$cardio_gvrf)
+colnames(vrfs.tosave) = c('f.eid','cardio_latent_agg','cardio_latent_gvrf')
+write.csv(vrfs.tosave,'data_derived/dim_red/latents_vrf.csv',row.names = FALSE)
+```
+
+```{r}
+evr(vrfs.merged, scale(vrfs.tosave[,2,drop=F]))
+```
+

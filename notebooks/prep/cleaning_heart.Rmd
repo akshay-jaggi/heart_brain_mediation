@@ -1,0 +1,63 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+# Set Up
+```{r setup}
+knitr::opts_knit$set(root.dir = normalizePath("../.."))
+```
+
+# Imports
+```{r}
+library(finalfit)
+library(mice)
+```
+
+# Load Data
+```{r}
+heart.radiomics = read.csv("data/heart.radiomics.csv")
+```
+
+# Prep Radiomics Data
+```{r}
+heart.radiomics.notdeprecated = heart.radiomics[,heart.radiomics[1,]!="Deprecated"]
+```
+
+```{r}
+feature.groups = read.csv("data/radiomics.groups.csv")
+```
+
+```{r}
+new_cols = paste(feature.groups[,2],
+             colnames(heart.radiomics.notdeprecated)[2:ncol(heart.radiomics.notdeprecated)],
+             sep = "_")
+colnames(heart.radiomics.notdeprecated)[2:ncol(heart.radiomics.notdeprecated)] = new_cols
+```
+
+```{r}
+feature.groups$Feature = colnames(heart.radiomics.notdeprecated)[2:ncol(heart.radiomics.notdeprecated)]
+heart.groups = feature.groups[grep("MYO|shape",feature.groups$Feature),2]
+```
+
+
+```{r}
+heart.radiomics.touse = heart.radiomics.notdeprecated[,
+                                                      grep("f.eid|MYO|shape",
+                                                  colnames(heart.radiomics.notdeprecated))]
+```
+
+# Completeness
+```{r}
+hist(apply(heart.radiomics.touse, 1, function(x) sum(is.na(x))))
+```
+
+```{r}
+heart.radiomics.final = heart.radiomics.touse[complete.cases(heart.radiomics.touse),]
+heart.radiomics.final = heart.radiomics.final %>% select(f.eid, everything())
+```
+
+# Save
+```{r}
+write.csv(heart.radiomics.final,'data_derived/cleaned/heart_cleaned.csv', row.names = FALSE)
+```

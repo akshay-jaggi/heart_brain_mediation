@@ -1,0 +1,65 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+# Set Up
+```{r setup}
+knitr::opts_knit$set(root.dir = normalizePath("../.."))
+```
+
+# Imports
+```{r}
+library(finalfit)
+library(mice)
+library(purrr)
+library(dplyr)
+```
+
+# Load Data
+```{r}
+cardio.data = read.csv("data/cardio.data.csv")
+brain.confounders = read.csv('data/brain.confounders.csv')
+disease.status  = read.csv('data/disease.status.csv')
+bsa = read.csv('data/bsa.csv')
+```
+
+# Process Conditions
+```{r}
+disease.status$cov_nosevere = apply(disease.status[,2:ncol(disease.status)],1,function(x) !any(x))
+disease.status.tomerge = disease.status[,c('f.eid','cov_nosevere')]
+```
+
+# Gather Data
+```{r}
+cov.data = data.frame("f.eid" = cardio.data$f.eid, 
+                      "cov_sex" = cardio.data$cov_sex,
+                      "cov_age"= cardio.data$cov_age)
+brain.covs = brain.confounders[,grepl('f.eid',colnames(brain.confounders)) | 
+                                 grepl('cov',colnames(brain.confounders))]
+```
+
+# Merge
+```{r}
+cov.frames = list(cov.data, brain.covs, disease.status.tomerge, bsa)
+merged.covs = 
+  cov.frames %>% 
+  purrr::reduce(inner_join,by="f.eid")
+merged.covs = merged.covs %>% select(f.eid, everything())
+```
+
+# Completeness
+```{r}
+missing_pattern(merged.covs)
+```
+```{r}
+merged.covs.final = merged.covs[complete.cases(merged.covs),]
+merged.covs.final = merged.covs.final %>% select(f.eid, everything())
+```
+
+
+# Save
+```{r}
+write.csv(merged.covs.final,'data_derived/cleaned/covs_cleaned.csv', row.names = FALSE)
+```
+

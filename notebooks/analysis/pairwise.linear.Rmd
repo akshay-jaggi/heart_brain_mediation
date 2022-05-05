@@ -1,0 +1,170 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+# Set Up
+```{r setup}
+knitr::opts_knit$set(root.dir = normalizePath("../.."))
+```
+
+# Imports
+```{r}
+library(finalfit)
+library(mice)
+library(purrr)
+library(dplyr)
+library(lavaan)
+library(ggplot2)
+library(gplots)
+```
+
+# Load Data
+```{r}
+latents.covariates.scaled = 
+  read.csv('data_derived/merged/latents.covariates.scaled.csv')
+latents.covariates.residualized.scaled = read.csv('data_derived/merged/latents.covariates.residualized.scaled.csv')
+```
+
+# Linear Model Each Variable against other variable + covariates 
+
+```{r}
+latent.names = colnames(latents.covariates.scaled)[grepl('latent',colnames(latents.covariates.scaled))]
+```
+
+```{r}
+lin.model = paste(c(latent.names[1]," ~ ", latent.names[2], "+ cov_age + cov_sex\n"),collapse = "")
+lin.model.sem = sem(lin.model,latents.covariates.scaled)
+out = standardizedsolution(lin.model.sem)
+dummy = out[out$op=="~"|out$op==":=",]
+dummy$est.std = rep(0,3)
+```
+
+```{r}
+lin.model.pairwise = list()
+for(my.var in latent.names) {
+  lin.model.pairwise[[my.var]] = list()
+  for(my.other.var in latent.names) {
+    # Fill with blanks if matched with self
+    if (my.var == my.other.var) {
+      dummy$lhs = rep(my.var,3)
+      dummy$rhs[1] = my.other.var
+      lin.model.pairwise[[my.var]][[my.other.var]] = dummy
+      next
+    }
+    lin.model = paste(c(my.var," ~ ", my.other.var, "+ cov_age + cov_sex\n"),collapse = "")
+    lin.model.sem = sem(lin.model,latents.covariates.scaled)
+    out = standardizedsolution(lin.model.sem)
+    lin.model.pairwise[[my.var]][[my.other.var]] = out[out$op=="~"|out$op==":=",]
+  }
+}
+```
+
+```{r}
+coef.grid = array(dim=c(length(latent.names), length(latent.names)), 
+                  dimnames = list(latent.names, latent.names))
+i = 1
+for(my.var in latent.names) {
+  j = 1
+  for(my.other.var in latent.names) {
+    coef.grid[i,j] = lin.model.pairwise[[my.var]][[my.other.var]]$est.std[1]
+    j = j + 1
+  }
+  i = i + 1
+}
+```
+
+```{r}
+new.tree.heatmap = function(data) { 
+  my_palette = colorRampPalette(c("darkred", "white", "darkblue"))(n = 50)
+    heatmap.2(data,
+              scale = 'none',
+            key.title = NULL,
+            key.xlab = "coefficient",
+            density.info = "none",
+            trace="none",
+            col=my_palette,
+            dendrogram = 'none',
+            Rowv= FALSE, 
+            Colv= "Rowv",
+            na.rm = TRUE,
+            cexRow = 1.2,
+            cexCol = 1.2,
+            srtCol = 45,
+            #breaks = seq(from = -0.25, to = 0.25, by = 0.01),
+            margins = c(4,17))
+  }
+```
+
+```{r}
+png('figures/analysis/linear.pairwise.png', width = 1000, height = 800, units = "px")
+new.tree.heatmap(coef.grid)
+dev.off()
+```
+
+```{r}
+lin.to.save = bind_rows(unlist(lin.model.pairwise,recursive=FALSE))
+lin.to.save$pvalue_adj = p.adjust(lin.to.save$pvalue)
+write.csv(lin.to.save[lin.to.save$rhs %in% latent.names,],"tables/analysis/linear.model.pairwise.csv")
+```
+
+# Linear Model Each Variable against other variable + covariates, Residualized
+
+```{r}
+latent.names = colnames(latents.covariates.scaled)[grepl('latent',colnames(latents.covariates.scaled))]
+```
+
+```{r}
+lin.model.pairwise.residualized = list()
+for(my.var in latent.names) {
+  lin.model.pairwise.residualized[[my.var]] = list()
+  for(my.other.var in latent.names) {
+    # Fill with blanks if matched with self
+    if (my.var == my.other.var) {
+      dummy$lhs = rep(my.var,3)
+      dummy$rhs[1] = my.other.var
+      lin.model.pairwise.residualized[[my.var]][[my.other.var]] = dummy
+      next
+    }
+    lin.model = paste(c(my.var," ~ ", my.other.var, "+ cov_age + cov_sex\n"),collapse = "")
+    lin.model.sem = sem(lin.model,latents.covariates.residualized.scaled)
+    out = standardizedsolution(lin.model.sem)
+    lin.model.pairwise.residualized[[my.var]][[my.other.var]] = out[out$op=="~"|out$op==":=",]
+  }
+}
+```
+
+```{r}
+coef.grid.resid = array(dim=c(length(latent.names), length(latent.names)), 
+                  dimnames = list(latent.names, latent.names))
+i = 1
+for(my.var in latent.names) {
+  j = 1
+  for(my.other.var in latent.names) {
+    coef.grid.resid[i,j] = lin.model.pairwise.residualized[[my.var]][[my.other.var]]$est.std[1]
+    j = j + 1
+  }
+  i = i + 1
+}
+```
+
+```{r}
+png('figures/analysis/linear.pairwise.residualized.png', width = 1000, height = 800, units = "px")
+new.tree.heatmap(coef.grid.resid)
+dev.off()
+```
+
+```{r}
+png('figures/analysis/linear.pairwise.diffs.png', width = 1000, height = 800, units = "px")
+new.tree.heatmap((coef.grid.resid-coef.grid))
+dev.off()
+```
+
+
+```{r}
+lin.to.save.residualized = bind_rows(unlist(lin.model.pairwise.residualized,recursive=FALSE))
+lin.to.save.residualized$pvalue_adj = p.adjust(lin.to.save.residualized$pvalue)
+write.csv(lin.to.save.residualized[
+  lin.to.save.residualized $rhs %in% latent.names,],
+  "tables/analysis/linear.model.pairwise.residualized.csv")
+```

@@ -1,0 +1,114 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+# Set Up
+```{r setup}
+knitr::opts_knit$set(root.dir = normalizePath("../.."))
+```
+
+# Imports
+```{r}
+library(finalfit)
+library(mice)
+```
+
+# Load Data
+```{r}
+brain.mri = read.csv("data/brain.mri.data.csv")
+brain.tracts = read.csv('data/brain.tracts.csv')
+```
+
+# Prepare Brain Data
+```{r}
+brain.volumes = data.frame("atrophy" = brain.mri$bio.volume_of_brain._grey.white_matter.0.imaging)
+brain.volumes$grey = brain.mri$bio.volume_of_grey_matter.0.imaging
+```
+
+```{r}
+brain.md = brain.mri[,grepl("weighted.mean_md_",colnames(brain.mri)) &
+                       grepl(paste(brain.tracts$name,collapse="|"),colnames(brain.mri))]
+brain.fa = brain.mri[,grepl("weighted.mean_fa_",colnames(brain.mri)) &
+                       grepl(paste(brain.tracts$name,collapse="|"),colnames(brain.mri))]
+```
+
+# Completeness
+```{r}
+ff_glimpse(brain.volumes)
+```
+
+```{r}
+ff_glimpse(brain.md)
+```
+
+```{r}
+ff_glimpse(brain.fa)
+```
+
+# Merge
+```{r}
+brain.volumes$f.eid = brain.mri$f.eid
+brain.md$f.eid = brain.mri$f.eid
+brain.fa$f.eid = brain.mri$f.eid
+```
+
+```{r}
+brain.mri.traditional= list(brain.volumes, brain.md,brain.fa) %>% 
+  purrr::reduce(inner_join,by="f.eid")
+```
+
+```{r}
+brain.mri.trad.final = brain.mri.traditional[complete.cases(brain.mri.traditional),]
+brain.mri.trad.final = brain.mri.traditional %>% select(f.eid, everything())
+```
+
+# Get Complete Brain Data
+```{r}
+brain.all.volumes = brain.mri[,grepl('volume_',colnames(brain.mri)) & 
+                                !grepl('normalised',colnames(brain.mri))]
+brain.weighted.means = brain.mri[,grepl("weighted.mean_",colnames(brain.mri)) &
+                       grepl(paste(brain.tracts$name,collapse="|"),colnames(brain.mri))]
+```
+
+```{r}
+brain.all.volumes$f.eid = brain.mri$f.eid
+brain.weighted.means$f.eid = brain.mri$f.eid
+```
+
+```{r}
+brain.mri.new = merge(brain.all.volumes, brain.weighted.means, by = 'f.eid')
+```
+
+# Completeness
+```{r}
+hist(apply(brain.mri.new, 1, function(x) sum(is.na(x))))
+```
+
+```{r}
+brain.mri.new.final = brain.mri.new[complete.cases(brain.mri.new),]
+brain.mri.new.final = brain.mri.new.final %>% select(f.eid, everything())
+```
+
+# Set to Same Patients
+```{r}
+f.eid.tokeep = intersect(brain.mri.trad.final$f.eid, brain.mri.new.final$f.eid)
+brain.mri.trad.matched = brain.mri.trad.final[brain.mri.trad.final$f.eid %in% f.eid.tokeep,]
+brain.mri.new.matched = brain.mri.new.final[brain.mri.new.final$f.eid %in% f.eid.tokeep,]
+```
+
+
+# Save
+```{r}
+write.csv(brain.mri.trad.matched,'data_derived/cleaned/brain_trad_cleaned.csv', row.names = FALSE)
+write.csv(brain.mri.new.matched,'data_derived/cleaned/brain_new_cleaned.csv', row.names = FALSE)
+```
+
+
+
+
+
+
+
+
+

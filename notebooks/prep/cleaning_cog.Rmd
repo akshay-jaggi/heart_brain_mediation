@@ -1,0 +1,51 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+# Set Up
+```{r setup}
+knitr::opts_knit$set(root.dir = normalizePath("../.."))
+```
+
+# Imports
+```{r}
+library(finalfit)
+library(mice)
+```
+
+# Load Data
+```{r}
+cog.data = read.csv("data/cog.data.csv")
+```
+
+# Prep Cog Data
+```{r}
+cog.data.ordered = cog.data[order(cog.data$f.eid),]
+cog = data.frame("vnr" = cog.data.ordered$bio.fluid_intelligence_score.0.imaging)
+cog$vismem = 
+  log(cog.data.ordered$bio.number_of_incorrect_matches_in_round.2.imaging+1)
+cog$rt = 
+  log(cog.data.ordered$bio.mean_time_to_correctly_identify_matches.0.imaging)
+cog$prosmem = 
+  as.numeric(cog.data.ordered$bio.prospective_memory_result.0.imaging == "Correct recall on first attempt")
+cog$f.eid = cog.data.ordered$f.eid
+```
+
+# Completeness
+```{r}
+missing_pattern(cog)
+```
+
+```{r}
+cog.final = cog[complete.cases(cog),]
+cog.final = cog.final %>% select(f.eid, everything())
+```
+
+# Save
+```{r}
+write.csv(cog.final,'data_derived/cleaned/cog_cleaned.csv', row.names = FALSE)
+```
+
+
+

@@ -1,0 +1,146 @@
+---
+title: "Cleaning VRFs"
+output: html_notebook
+---
+
+# Set Up
+```{r setup}
+knitr::opts_knit$set(root.dir = normalizePath("../.."))
+```
+
+# Imports
+```{r}
+library(finalfit)
+library(mice)
+library(dplyr)
+```
+
+# Load Data
+```{r}
+cardio.data = read.csv("data/cardio.data.csv")
+extra.cardio.data = read.csv("data/extra.cardio.data.csv")
+```
+
+# Prep Cardio Vars
+```{r}
+extra.cardio.baseline = extra.cardio.data[order(extra.cardio.data$f.eid),
+                                          grep("f.eid|baseline",colnames(extra.cardio.data))]
+```
+
+```{r}
+clean_and_zero_old = function(vec) {
+  num_vec= as.numeric(levels(vec))[vec]
+  num_vec[is.na(num_vec)] = 0
+  return(num_vec)
+}
+
+clean_and_zero = function(vec) {
+  num_vec= as.numeric(vec)
+  num_vec[is.na(num_vec)] = 0
+  return(num_vec)
+}
+```
+
+Test if reported
+```{r}
+extra.cardio.baseline$knows_history = !(
+  extra.cardio.baseline$bio.age_started_smoking_in_current_smokers.0.baseline == "Do not know" |
+    extra.cardio.baseline$bio.age_started_smoking_in_former_smokers.0.baseline == "Do not know" |
+    extra.cardio.baseline$bio.age_stopped_smoking.0.baseline == "Do not know" |
+    extra.cardio.baseline$bio.age_stopped_smoking_cigarettes_.current_cigar.pipe_or_previous_cigarette_smoker..0.baseline == "Do not know")
+```
+
+
+Make pack year data
+```{r}
+extra.cardio.baseline$age_started_smoking = 
+  clean_and_zero(extra.cardio.baseline$bio.age_started_smoking_in_current_smokers.0.baseline) +
+  clean_and_zero(extra.cardio.baseline$bio.age_started_smoking_in_former_smokers.0.baseline) 
+```
+
+```{r}
+extra.cardio.baseline$cigs_per_day = 
+  clean_and_zero(extra.cardio.baseline$bio.number_of_cigarettes_currently_smoked_daily_.current_cigarette_smokers..0.baseline) + 
+  clean_and_zero(extra.cardio.baseline$bio.number_of_cigarettes_previously_smoked_daily.0.baseline) +
+  clean_and_zero(extra.cardio.baseline$bio.number_of_cigarettes_previously_smoked_daily_.current_cigar.pipe_smokers..0.baseline)
+
+extra.cardio.baseline$packs_per_day = extra.cardio.baseline$cigs_per_day / 20
+  
+extra.cardio.baseline$age_stopped_smoking = 
+  as.numeric(cardio.data$cov_age*(clean_and_zero(extra.cardio.baseline$bio.age_started_smoking_in_current_smokers.0.baseline)>0)) +
+  clean_and_zero(extra.cardio.baseline$bio.age_stopped_smoking.0.baseline) +
+  clean_and_zero(extra.cardio.baseline$bio.age_stopped_smoking_cigarettes_.current_cigar.pipe_or_previous_cigarette_smoker..0.baseline)
+
+extra.cardio.baseline$pack_years = 
+  (extra.cardio.baseline$age_stopped_smoking - extra.cardio.baseline$age_started_smoking)*extra.cardio.baseline$packs_per_day*
+  as.numeric(extra.cardio.baseline$knows_history)
+```
+
+```{r}
+ff_glimpse(extra.cardio.baseline)
+```
+
+Make WHR
+```{r}
+extra.cardio.baseline$whr = extra.cardio.baseline$bio.waist_circumference.0.baseline / 
+  extra.cardio.baseline$bio.hip_circumference.0.baseline
+```
+
+```{r}
+safe_mean = function(x,y) {
+  if(is.na(x) & is.na(y)) {
+    return(NA)
+  } else if(!is.na(x) & !is.na(y)) {
+    return((x + y)/2)
+  } else if(is.na(x)) {
+    return(y) 
+  } else {
+    return(x)
+  }
+}
+safe_mean_vec = Vectorize(safe_mean)
+```
+
+Get BP
+```{r}
+extra.cardio.baseline$mean_sbp = safe_mean_vec(extra.cardio.baseline$bio.systolic_blood_pressure._automated_reading.0.baseline, 
+          extra.cardio.baseline$bio.systolic_blood_pressure._automated_reading.1.baseline)
+extra.cardio.baseline$mean_dbp = safe_mean_vec(extra.cardio.baseline$bio.diastolic_blood_pressure._automated_reading.0.baseline, 
+          extra.cardio.baseline$bio.diastolic_blood_pressure._automated_reading.1.baseline)
+```
+
+# Merge All Cardio Vars
+```{r}
+vrfs = data.frame("hypertension" = cardio.data$cov_hypertens)
+vrfs$pack_years = extra.cardio.baseline$pack_years
+vrfs$sbp = extra.cardio.baseline$mean_sbp
+vrfs$dbp = extra.cardio.baseline$mean_dbp
+vrfs$diabetes = cardio.data$cov_diabetes
+vrfs$hyperchol = cardio.data$cov_highchol
+vrfs$bmi = extra.cardio.baseline$bio.body_mass_index_.bmi..0.baseline
+vrfs$whr = extra.cardio.baseline$whr
+vrfs$f.eid = cardio.data$f.eid
+```
+
+# Completeness
+```{r}
+missing_pattern(vrfs)
+```
+
+
+```{r}
+vrfs.final = vrfs[complete.cases(vrfs),]
+vrfs.final = vrfs.final %>% dplyr::select(f.eid, everything())
+```
+
+# Save
+```{r}
+write.csv(vrfs.final,'data_derived/cleaned/vrfs_cleaned.csv', row.names = FALSE)
+```
+
+
+
+
+
+
+

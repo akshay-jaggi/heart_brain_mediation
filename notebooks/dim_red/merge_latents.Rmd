@@ -1,0 +1,43 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+# Set Up
+```{r setup}
+knitr::opts_knit$set(root.dir = normalizePath("../.."))
+```
+
+# Imports
+```{r}
+library(finalfit)
+library(mice)
+library(purrr)
+library(dplyr)
+```
+
+# Load Data
+```{r}
+vrf.latents = read.csv('data_derived/dim_red/latents_vrf.csv')
+cog.latents = read.csv('data_derived/dim_red/latents_cog.csv')
+heart.latents = read.csv('data_derived/dim_red/latents_heart.csv')
+brain.latents = read.csv('data_derived/dim_red/latents_brain.csv')
+heart.ccs = read.csv('data_derived/dim_red/latents_heart_ccs.csv')[,1:4]
+brain.ccs = read.csv('data_derived/dim_red/latents_brain_ccs.csv')[,1:4]
+```
+
+# Merge
+```{r}
+all.latents = list(vrf.latents, cog.latents, heart.latents, brain.latents, heart.ccs, brain.ccs)
+merged.latents = all.latents %>% 
+  purrr::reduce(inner_join,by="f.eid")
+merged.latents = merged.latents %>% 
+  dplyr::select(f.eid, everything())
+```
+
+# Save
+```{r}
+write.csv(merged.latents,
+          'data_derived/merged/latents.csv', row.names = FALSE)
+```
+

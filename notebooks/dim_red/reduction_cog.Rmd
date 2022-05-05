@@ -1,0 +1,84 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+# Set Up
+```{r setup}
+knitr::opts_knit$set(root.dir = normalizePath("../.."))
+```
+
+# Imports
+```{r}
+library(lavaan)
+library(semPlot)
+library(factoextra)
+source('functions/explained_variance.R')
+```
+
+# Load Data
+```{r}
+vrf.cog.heart.brain.trad = read.csv('data_derived/merged/vrf.cog.heart.brain.trad.healthy.csv')
+```
+
+```{r}
+cog.merged = vrf.cog.heart.brain.trad[,grep("cog_",colnames(vrf.cog.heart.brain.trad))]
+```
+
+
+# CFA for g
+```{r}
+cog.merged = data.frame(lapply(cog.merged,as.numeric))
+g = paste(c("g=~",colnames(cog.merged)),collapse="+")
+g_cfa = cfa(g, cog.merged)
+```
+
+```{r}
+fitMeasures(g_cfa, c("cfi","tli","rmsea","srmr",'r2'))
+```
+
+
+
+```{r}
+write.csv(standardizedSolution(g_cfa),"tables/dim_red/g_cfa.csv")
+```
+
+```{r}
+labels = c("vnr", "vismem", "rt","promem","g")
+semPaths(g_cfa,what="std",fade=FALSE,nodeLabels=labels,edge.label.cex=1,sizeMan=5,edge.color="black",
+         curve=2,mar=c(10,5,5,5),
+         filetype='png',filename="figures/dim_red/g")
+```
+
+```{r}
+cog.aggregate = data.frame('f.eid' = vrf.cog.heart.brain.trad$f.eid)
+cog.aggregate$cog_latent_g = predict(g_cfa)
+```
+
+
+# PCA for g
+```{r}
+cog.pca = prcomp(cog.merged, center=TRUE, scale=TRUE)
+```
+
+```{r}
+png("figures/dim_red/cog.eigs.png")
+fviz_eig(cog.pca)
+dev.off()
+```
+
+```{r}
+cog.aggregate$cog_latent_pc1 = cog.pca$x[,1]
+```
+
+```{r}
+write.csv(cog.pca$rotation,"tables/dim_red/cog.pca.loadings.csv")
+```
+
+```{r}
+write.csv(cog.aggregate,'data_derived/dim_red/latents_cog.csv',row.names = FALSE)
+```
+
+```{r}
+evr(cog.merged, cog.aggregate[,2,drop=F])
+```

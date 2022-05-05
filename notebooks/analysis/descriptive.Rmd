@@ -1,0 +1,103 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+# Set Up
+```{r setup}
+knitr::opts_knit$set(root.dir = normalizePath("../.."))
+```
+
+# Imports
+```{r}
+library(finalfit)
+library(mice)
+library(purrr)
+library(dplyr)
+library(lavaan)
+```
+
+# Load Data
+```{r}
+latents = read.csv('data_derived/merged/latents.csv')
+merged.all = read.csv('data_derived/merged/vrf.cog.heart.brain.trad.healthy.csv')
+covariates = merged.all[,grepl('cov_',colnames(merged.all))]
+```
+
+```{r}
+latents.covariates = cbind(latents, covariates)
+```
+
+# Linear Model Each Variable as a Function of the Covariates
+
+## Without Residualizing
+```{r}
+latent.names = colnames(latents.covariates)[grepl('latent',colnames(latents.covariates))]
+latents.covariates[,latent.names] = scale(latents.covariates[,latent.names])
+```
+
+```{r}
+lin.model.cov = list()
+for(latent in latent.names) {
+  lin.model = paste(c(latent," ~ cov_age + cov_sex"),collapse = "")
+  lin.model.sem = sem(lin.model,latents.covariates)
+  out = standardizedsolution(lin.model.sem)
+  lin.model.cov[[latent]] = out[out$op=="~"|out$op==":=",]
+}
+```
+
+
+```{r}
+lin.cov.frame = bind_rows(lin.model.cov)
+lin.cov.frame$pvalue_adj = p.adjust(lin.cov.frame$pvalue)
+write.csv(lin.cov.frame,"tables/analysis/linear.model.covariates.csv")
+```
+
+## With Residualizing
+```{r}
+latents.covariates.residualized = latents.covariates
+to.residualize = colnames(latents.covariates)[grepl('latent',colnames(latents.covariates)) &
+                                                grepl('heart|brain',colnames(latents.covariates))]
+for(latent in to.residualize) {
+  if(grepl('heart',latent)) {
+    lin.model = paste(c(latent," ~ cov_bsa"),collapse='')
+  } else {
+    lin.model = paste(c(latent," ~ cov_headsize + cov_pos_x + cov_pos_y + cov_pos_z"),collapse='')
+  }
+  latents.covariates.residualized[,latent] = rstandard(lm(lin.model, latents.covariates))
+}
+```
+
+```{r}
+not.residualized = colnames(latents.covariates)[grepl('latent',colnames(latents.covariates)) &
+                                                !grepl('heart|brain',colnames(latents.covariates))]
+latents.covariates.residualized[,not.residualized] =
+  scale(latents.covariates.residualized[,not.residualized])
+```
+
+```{r}
+latent.names = colnames(latents.covariates)[grepl('latent',colnames(latents.covariates))]
+lin.model.cov.residualized = list()
+for(latent in latent.names) {
+  lin.model = paste(c(latent," ~ cov_age + cov_sex"),collapse = "")
+  lin.model.sem = sem(lin.model,latents.covariates.residualized)
+  out = standardizedsolution(lin.model.sem)
+  lin.model.cov.residualized[[latent]] = out[out$op=="~"|out$op==":=",]
+}
+```
+
+
+```{r}
+lin.cov.frame.residualized = bind_rows(lin.model.cov.residualized)
+lin.cov.frame.residualized$pvalue_adj = p.adjust(lin.cov.frame.residualized$pvalue)
+write.csv(lin.cov.frame.residualized,"tables/analysis/linear.model.covariates.residualized.csv")
+```
+
+# Save the residualized data
+```{r}
+write.csv(latents.covariates,
+          'data_derived/merged/latents.covariates.scaled.csv')
+write.csv(latents.covariates.residualized,
+          'data_derived/merged/latents.covariates.residualized.scaled.csv')
+```
+
