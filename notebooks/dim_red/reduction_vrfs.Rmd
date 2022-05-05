@@ -35,12 +35,16 @@ vrfs.aggregate$high_whr = (vrf.cog.heart.brain.trad$cov_sex & vrfs.aggregate$car
 ```
 
 ```{r}
-vrfs.aggregate$cardio_agg = rowSums(vrfs.aggregate[,c('cardio_hypertension','cardio_hyperchol','cardio_diabetes',
-                                  'smoked','high_bmi', 'high_whr')])
+binary.features = c('cardio_hypertension','cardio_hyperchol','cardio_diabetes',
+                  'smoked','high_bmi', 'high_whr')
+vrfs.aggregate$cardio_agg = rowSums(vrfs.aggregate[,binary.features])
 ```
 
 ```{r}
 hist(vrfs.aggregate$cardio_agg)
+```
+```{r}
+colSums(vrfs.aggregate[,binary.features])/nrow(vrfs.aggregate)
 ```
 
 
@@ -85,8 +89,9 @@ semPaths(gvrf_cfa,what="std",fade=FALSE,nodeLabels=labels,edge.label.cex=1,sizeM
 # Heatmap
 ```{r}
 vrfs.cor = cor(vrfs.merged)
+colnames(vrfs.cor) = sapply(colnames(vrfs.cor),function(x) strsplit(x,'_')[[1]][2])
 heatmap.with.labels(vrfs.cor)
-ggsave('figures/dim_red/vrf_cor.png')
+ggsave('figures/dim_red/vrf.cor.png')
 ```
 
 # Save Latents

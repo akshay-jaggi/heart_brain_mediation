@@ -61,7 +61,7 @@ write.csv(standardizedSolution(gMD_cfa),"tables/dim_red/gmd_cfa.csv")
 brain.md.cor = cor(merged.brain.md[,order(colnames(merged.brain.md))])
 colnames(brain.md.cor) = as.character(tract.names$name)
 heatmap.with.labels(brain.md.cor)
-ggsave('figures/dim_red/md_cor.png')
+ggsave('figures/dim_red/md.cor.png')
 ```
 
 ## gFA 
@@ -101,7 +101,7 @@ write.csv(standardizedSolution(gfa_cfa),"tables/dim_red/gfa_cfa.csv")
 brain.fa.cor = cor(merged.brain.fa[,order(colnames(merged.brain.fa))])
 colnames(brain.fa.cor) = as.character(tract.names$name)
 heatmap.with.labels(brain.fa.cor)
-ggsave('figures/dim_red/fa_cor.png')
+ggsave('figures/dim_red/fa.cor.png')
 ```
 
 # Brain PCA
@@ -133,7 +133,7 @@ brain.groups = factor(brain.groups)
 group.numbers <- as.numeric(brain.groups)
 side.colors <- brewer.pal(10, "Set3")[group.numbers]
 heatmap.with.tree(brain.cor,brain.groups,side.colors)
-ggsave('figures/dim_red/cor_brain.png')
+#ggsave('figures/dim_red/brain.cor.png')
 ```
 
 

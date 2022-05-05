@@ -53,8 +53,9 @@ semPaths(g_cfa,what="std",fade=FALSE,nodeLabels=labels,edge.label.cex=1,sizeMan=
 
 ```{r}
 cog.cor = cor(cog.merged)
+colnames(cog.cor) = sapply(colnames(cog.cor),function(x) strsplit(x,'_')[[1]][2])
 heatmap.with.labels(cog.cor)
-ggsave('figures/dim_red/cog_cor.png')
+ggsave('figures/dim_red/cog.cor.png')
 ```
 
 ```{r}

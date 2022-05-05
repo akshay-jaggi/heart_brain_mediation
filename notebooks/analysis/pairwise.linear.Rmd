@@ -17,6 +17,7 @@ library(dplyr)
 library(lavaan)
 library(ggplot2)
 library(gplots)
+source('functions/heatmaps.custom.R')
 ```
 
 # Load Data
@@ -141,7 +142,12 @@ i = 1
 for(my.var in latent.names) {
   j = 1
   for(my.other.var in latent.names) {
-    coef.grid.resid[i,j] = lin.model.pairwise.residualized[[my.var]][[my.other.var]]$est.std[1]
+    if (j == i) {
+      coef.grid.resid[i,j] = NA
+    } else {
+      coef.grid.resid[i,j] = lin.model.pairwise.residualized[[my.var]][[my.other.var]]$est.std[1]
+    }
+    
     j = j + 1
   }
   i = i + 1
@@ -149,9 +155,10 @@ for(my.var in latent.names) {
 ```
 
 ```{r}
-png('figures/analysis/linear.pairwise.residualized.png', width = 1000, height = 800, units = "px")
-new.tree.heatmap(coef.grid.resid)
-dev.off()
+#png('figures/analysis/linear.pairwise.residualized.png', width = 1000, height = 800, units = "px")
+heatmap.with.labels(coef.grid.resid, -1,1,'coefficient')
+ggsave('figures/analysis/linear.pairwise.residualized.png')
+#dev.off()
 ```
 
 ```{r}

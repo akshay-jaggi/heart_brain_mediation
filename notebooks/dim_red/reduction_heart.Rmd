@@ -63,8 +63,9 @@ heart.groups = sapply(colnames(merged.heart),function(x) strsplit(x,'_')[[1]][2]
 heart.groups = factor(heart.groups, levels = c("shape","intensity","texture"))
 group.numbers <- as.numeric(heart.groups)
 side.colors <- brewer.pal(9, "Set1")[group.numbers]
+#png(file = 'figures/dim_red/heart.cor.png',width=1200,height=800)
 heatmap.with.tree(heart.cor,heart.groups,side.colors)
-ggsave('figures/dim_red/cor_heart.png')
+#dev.off()
 ```
 
 
