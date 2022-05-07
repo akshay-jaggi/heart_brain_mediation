@@ -95,7 +95,7 @@ clusters$nickname = factor(clusters$nickname,
 ## Direct
 ```{r}
 large.des = large.ind.frame[large.ind.frame$lhs == 'de',]
-large.des$pvalue_adj = p.adjust(large.des$pvalue)
+large.des$pvalue_adj = p.adjust(large.des$pvalue,'BH')
 ```
 
 ```{r}
@@ -131,7 +131,7 @@ write.csv(large.des.toplot,"tables/analysis/direct.individual.single.heart.csv")
 
 ```{r}
 large.ies = large.ind.frame[large.ind.frame$lhs == 'ie',]
-large.ies$pvalue_adj = p.adjust(large.ies$pvalue)
+large.ies$pvalue_adj = p.adjust(large.ies$pvalue,'BH')
 ```
 
 ```{r}
@@ -184,7 +184,7 @@ large.ind.frame.residualized = bind_rows(ind.results.residualized, .id = "mediat
 
 ```{r}
 large.des.residualized = large.ind.frame.residualized[large.ind.frame.residualized$lhs == 'de',]
-large.des.residualized$pvalue_adj = p.adjust(large.des.residualized$pvalue)
+large.des.residualized$pvalue_adj = p.adjust(large.des.residualized$pvalue,'BH')
 ```
 
 ## Cluster and Display
@@ -234,7 +234,7 @@ write.csv(large.des.toplot.residualized,"tables/analysis/direct.individual.singl
 
 ```{r}
 large.ies.residualized = large.ind.frame.residualized[large.ind.frame.residualized$lhs == 'ie',]
-large.ies.residualized$pvalue_adj = p.adjust(large.ies.residualized$pvalue)
+large.ies.residualized$pvalue_adj = p.adjust(large.ies.residualized$pvalue,'BH')
 ```
 
 ## Cluster and Display

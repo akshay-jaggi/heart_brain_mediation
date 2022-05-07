@@ -91,7 +91,7 @@ get.nickname = function(name) {
 
 ```{r}
 brain.des = brain.ind.frame[brain.ind.frame$lhs == 'de',]
-brain.des$pvalue_adj = p.adjust(brain.des$pvalue)
+brain.des$pvalue_adj = p.adjust(brain.des$pvalue,'BH')
 brain.des$nickname = sapply(brain.des$mediator, get.nickname)
 ```
 
@@ -118,7 +118,7 @@ write.csv(brain.des,"tables/analysis/direct.individual.single.brain.csv")
 ## Individual Brain Mediation Indirect
 ```{r}
 brain.ies = brain.ind.frame[brain.ind.frame$lhs == 'ie',]
-brain.ies$pvalue_adj = p.adjust(brain.ies$pvalue)
+brain.ies$pvalue_adj = p.adjust(brain.ies$pvalue,'BH')
 brain.ies$nickname = sapply(brain.ies$mediator, get.nickname)
 ```
 
@@ -163,7 +163,7 @@ brain.ind.frame.resid = bind_rows(ind.results.brain.resid, .id = "mediator")
 
 ```{r}
 brain.des.resid = brain.ind.frame.resid[brain.ind.frame.resid$lhs == 'de',]
-brain.des.resid$pvalue_adj = p.adjust(brain.des.resid$pvalue)
+brain.des.resid$pvalue_adj = p.adjust(brain.des.resid$pvalue,'BH')
 brain.des.resid$nickname = sapply(brain.ies$mediator, get.nickname)
 ```
 
@@ -191,7 +191,7 @@ write.csv(brain.des,"tables/analysis/direct.individual.single.brain.residualized
 ## Individual Brain Mediation Indirect
 ```{r}
 brain.ies.resid = brain.ind.frame.resid[brain.ind.frame.resid$lhs == 'ie',]
-brain.ies.resid$pvalue_adj = p.adjust(brain.ies.resid$pvalue)
+brain.ies.resid$pvalue_adj = p.adjust(brain.ies.resid$pvalue,'BH')
 brain.ies.resid$nickname = sapply(brain.ies.resid$mediator, get.nickname)
 ```
 

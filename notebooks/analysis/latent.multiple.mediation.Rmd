@@ -85,7 +85,8 @@ mm.out = standardizedsolution(multiple.mediation.model)
 ```
 
 ```{r}
-mm.out$pvalue_adj = p.adjust(mm.out$pvalue)
+mm.out$pvalue_adj = mm.out$pvalue
+mm.out$pvalue_adj[grepl('indirect',mm.out$lhs)] = p.adjust(mm.out$pvalue[grepl('indirect',mm.out$lhs)],'BH')
 write.csv(mm.out[mm.out$op=="~"|mm.out$op==":=",],"tables/analysis/mediation.latents.multiple.csv")
 ```
 
@@ -112,13 +113,14 @@ mm.out.residualized = standardizedsolution(multiple.mediation.model.residualized
 ```
 
 ```{r}
-mm.out.residualized$pvalue_adj = p.adjust(mm.out.residualized$pvalue)
+mm.out.residualized$pvalue_adj = mm.out.residualized$pvalue
+mm.out.residualized$pvalue_adj[grepl('indirect',mm.out.residualized$lhs)] = p.adjust(mm.out.residualized$pvalue[grepl('indirect',mm.out.residualized$lhs)],'BH')
 write.csv(mm.out.residualized[mm.out.residualized$op=="~"|mm.out.residualized$op==":=",],
           "tables/analysis/mediation.latents.multiple.residualized.csv")
 ```
 
 ```{r}
-inds.resid = mm.out.residualized[grepl('indirect',mm.out$lhs),]
+inds.resid = mm.out.residualized[grepl('indirect',mm.out.residualized$lhs),]
 inds.resid$mediator = mediators
 ```
 

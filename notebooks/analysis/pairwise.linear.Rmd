@@ -98,10 +98,10 @@ new.tree.heatmap = function(data) {
 ```
 
 ```{r}
-png('figures/analysis/linear.pairwise.png', width = 1000, height = 800, units = "px")
-new.tree.heatmap(coef.grid)
-dev.off()
+heatmap.with.labels(coef.grid, -1,1,'coefficient')
+ggsave('figures/analysis/linear.pairwise.png')
 ```
+
 
 ```{r}
 lin.to.save = bind_rows(unlist(lin.model.pairwise,recursive=FALSE))
@@ -161,16 +161,11 @@ ggsave('figures/analysis/linear.pairwise.residualized.png')
 #dev.off()
 ```
 
-```{r}
-png('figures/analysis/linear.pairwise.diffs.png', width = 1000, height = 800, units = "px")
-new.tree.heatmap((coef.grid.resid-coef.grid))
-dev.off()
-```
-
 
 ```{r}
 lin.to.save.residualized = bind_rows(unlist(lin.model.pairwise.residualized,recursive=FALSE))
-lin.to.save.residualized$pvalue_adj = p.adjust(lin.to.save.residualized$pvalue)
+lin.to.save.residualized$pvalue_adj = lin.to.save.residualized$pvalue 
+lin.to.save.residualized$pvalue_adj[!grepl('cov_',lin.to.save.residualized$rhs)] = p.adjust(lin.to.save.residualized$pvalue_adj[!grepl('cov_',lin.to.save.residualized$rhs)],'BH')
 write.csv(lin.to.save.residualized[
   lin.to.save.residualized $rhs %in% latent.names,],
   "tables/analysis/linear.model.pairwise.residualized.csv")

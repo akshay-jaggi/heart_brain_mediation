@@ -52,7 +52,9 @@ for(mediator in mediators) {
 
 ```{r}
 med.frame = bind_rows(med.results, .id = "mediator")
-med.frame$pvalue_adj = p.adjust(med.frame$pvalue)
+med.frame$pvalue_adj = med.frame$pvalue 
+med.frame$pvalue_adj[med.frame$lhs=='de'] = p.adjust(med.frame$pvalue[med.frame$lhs=='de'],'BH')
+med.frame$pvalue_adj[med.frame$lhs=='ie'] = p.adjust(med.frame$pvalue[med.frame$lhs=='ie'],'BH')
 write.csv(med.frame,"tables/analysis/mediation.latents.single.csv")
 ```
 
@@ -99,7 +101,9 @@ for(mediator in mediators) {
 
 ```{r}
 med.frame.resid = bind_rows(med.results.resid, .id = "mediator")
-med.frame.resid$pvalue_adj = p.adjust(med.frame.resid$pvalue)
+med.frame.resid$pvalue_adj = med.frame.resid$pvalue 
+med.frame.resid$pvalue_adj[med.frame.resid$lhs=='de'] = p.adjust(med.frame.resid$pvalue[med.frame.resid$lhs=='de'],'BH')
+med.frame.resid$pvalue_adj[med.frame.resid$lhs=='ie'] = p.adjust(med.frame.resid$pvalue[med.frame.resid$lhs=='ie'],'BH')
 write.csv(med.frame.resid,"tables/analysis/mediation.latents.single.residualized.csv")
 ```
 

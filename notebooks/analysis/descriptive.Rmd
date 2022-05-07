@@ -49,9 +49,14 @@ for(latent in latent.names) {
 
 ```{r}
 lin.cov.frame = bind_rows(lin.model.cov)
-lin.cov.frame$pvalue_adj = p.adjust(lin.cov.frame$pvalue)
+lin.cov.frame$pvalue_adj = p.adjust(lin.cov.frame$pvalue, 'BH')
 write.csv(lin.cov.frame,"tables/analysis/linear.model.covariates.csv")
 ```
+
+```{r}
+cor(latents.covariates$cov_bsa, -latents.covariates$cov_headsize)
+```
+
 
 ## With Residualizing
 ```{r}
@@ -62,7 +67,7 @@ for(latent in to.residualize) {
   if(grepl('heart',latent)) {
     lin.model = paste(c(latent," ~ cov_bsa"),collapse='')
   } else {
-    lin.model = paste(c(latent," ~ cov_headsize + cov_pos_x + cov_pos_y + cov_pos_z"),collapse='')
+    lin.model = paste(c(latent," ~  -cov_headsize + cov_pos_x + cov_pos_y + cov_pos_z"),collapse='')
   }
   latents.covariates.residualized[,latent] = rstandard(lm(lin.model, latents.covariates))
 }
@@ -89,7 +94,7 @@ for(latent in latent.names) {
 
 ```{r}
 lin.cov.frame.residualized = bind_rows(lin.model.cov.residualized)
-lin.cov.frame.residualized$pvalue_adj = p.adjust(lin.cov.frame.residualized$pvalue)
+lin.cov.frame.residualized$pvalue_adj = p.adjust(lin.cov.frame.residualized$pvalue, 'BH')
 write.csv(lin.cov.frame.residualized,"tables/analysis/linear.model.covariates.residualized.csv")
 ```
 
