@@ -68,7 +68,7 @@ ggplot(des, aes(x=mediator, y=est.std)) +
   geom_bar(stat="identity", fill='darkred') + 
   geom_errorbar(aes(ymin=ci.lower, ymax=ci.upper),width=.2) + 
   ylab('direct effect') + 
-  theme_classic() +  scale_y_continuous(breaks=seq(-0.1,0.1,0.05),limits=c(-0.12,0.12)) +
+  theme_classic() +  scale_y_continuous(breaks=seq(-0.1,0.1,0.05),limits=c(-0.1,0.1)) +
   theme(axis.text.x = element_text(angle = 70, vjust = 0.9, hjust=1))
 ggsave('figures/analysis/direct.latents.single.png')
 ```
@@ -78,7 +78,7 @@ ggplot(ies, aes(x=mediator, y=est.std)) +
   geom_bar(stat="identity", fill ='darkblue') + 
   geom_errorbar(aes(ymin=ci.lower, ymax=ci.upper),width=.2) + 
   ylab('indirect effect') + 
-  theme_classic() + scale_y_continuous(breaks=seq(-0.05,0.05,0.05),limits=c(-0.1,0.1)) +
+  theme_classic() + scale_y_continuous(breaks=seq(-0.05,0.05,0.05),limits=c(-0.075,0.075)) +
   theme(axis.text.x = element_text(angle = 70, vjust = 0.9, hjust=1))
 ggsave('figures/analysis/indirect.latents.single.png')
 ```
@@ -117,7 +117,7 @@ ggplot(des.resid, aes(x=mediator, y=est.std)) +
   geom_bar(stat="identity", fill='darkred') + 
   geom_errorbar(aes(ymin=ci.lower, ymax=ci.upper),width=.2) + 
   ylab('direct effect') + 
-  theme_classic() +  scale_y_continuous(breaks=seq(-0.1,0.1,0.05),limits=c(-0.12,0.12)) +
+  theme_classic() +  scale_y_continuous(breaks=seq(-0.1,0.1,0.05),limits=c(-0.1,0.1)) +
   theme(axis.text.x = element_text(angle = 70, vjust = 0.9, hjust=1))
 ggsave('figures/analysis/direct.latents.single.residualized.png')
 ```
@@ -127,7 +127,7 @@ ggplot(ies.resid, aes(x=mediator, y=est.std)) +
   geom_bar(stat="identity", fill ='darkblue') + 
   geom_errorbar(aes(ymin=ci.lower, ymax=ci.upper),width=.2) + 
   ylab('indirect effect') + 
-  theme_classic() + scale_y_continuous(breaks=seq(-0.05,0.05,0.05),limits=c(-0.1,0.1)) +
+  theme_classic() + scale_y_continuous(breaks=seq(-0.05,0.05,0.05),limits=c(-0.075,0.075)) +
   theme(axis.text.x = element_text(angle = 70, vjust = 0.9, hjust=1))
 ggsave('figures/analysis/indirect.latents.single.residualized.png')
 ```

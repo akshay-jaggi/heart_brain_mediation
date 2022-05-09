@@ -56,6 +56,7 @@ for(my.var in latent.names) {
     lin.model = paste(c(my.var," ~ ", my.other.var, "+ cov_age + cov_sex\n"),collapse = "")
     lin.model.sem = sem(lin.model,latents.covariates.scaled)
     out = standardizedsolution(lin.model.sem)
+    out$r = c(lavInspect(lin.model.sem,'rsquare'),rep(NA,9))
     lin.model.pairwise[[my.var]][[my.other.var]] = out[out$op=="~"|out$op==":=",]
   }
 }
@@ -100,6 +101,7 @@ new.tree.heatmap = function(data) {
 ```{r}
 heatmap.with.labels(coef.grid, -1,1,'coefficient')
 ggsave('figures/analysis/linear.pairwise.png')
+#new.tree.heatmap(coef.grid)
 ```
 
 
@@ -130,10 +132,12 @@ for(my.var in latent.names) {
     lin.model = paste(c(my.var," ~ ", my.other.var, "+ cov_age + cov_sex\n"),collapse = "")
     lin.model.sem = sem(lin.model,latents.covariates.residualized.scaled)
     out = standardizedsolution(lin.model.sem)
+    out$r = c(lavInspect(lin.model.sem,'rsquare'),rep(NA,9))
     lin.model.pairwise.residualized[[my.var]][[my.other.var]] = out[out$op=="~"|out$op==":=",]
   }
 }
 ```
+
 
 ```{r}
 coef.grid.resid = array(dim=c(length(latent.names), length(latent.names)), 
@@ -169,4 +173,55 @@ lin.to.save.residualized$pvalue_adj[!grepl('cov_',lin.to.save.residualized$rhs)]
 write.csv(lin.to.save.residualized[
   lin.to.save.residualized $rhs %in% latent.names,],
   "tables/analysis/linear.model.pairwise.residualized.csv")
+```
+
+
+```{r}
+gvrf.heart.brain = lin.to.save.residualized[grepl('gvrf',lin.to.save.residualized$lhs) & 
+                                              grepl('heart|brain',lin.to.save.residualized$rhs),]
+test = factor(grepl('heart',gvrf.heart.brain$rhs))
+levels(test) = c('brain','heart')
+gvrf.heart.brain$class = test
+gvrf.heart.brain$sig = (gvrf.heart.brain$pvalue_adj < 0.01) & (!is.na(gvrf.heart.brain$pvalue_adj))
+```
+
+```{r}
+ggplot(gvrf.heart.brain, aes(x = class, y = r)) + 
+  geom_boxplot() + 
+  geom_point(aes(alpha=sig), position = position_jitter(0.1)) + 
+  ylab("R-squared") + 
+  scale_alpha_discrete('significant',labels=c('False','True')) + ylim(0,0.5) +
+  ggtitle('gVRF') + 
+  #scale_y_continuous(breaks=seq(-0.01,0.01,0.01),limits=c(-0.015,0.015)) +
+  theme_classic()+ 
+    theme(
+  axis.title.x = element_blank(),
+  axis.ticks.x = element_blank(),
+  plot.title = element_text(face='bold',hjust = 0.5))
+ggsave('figures/analysis/linear.gvrf.residualized.png')
+```
+
+```{r}
+g.heart.brain = lin.to.save.residualized[grepl('cog_latent_g',lin.to.save.residualized$lhs) & 
+                                              grepl('heart|brain',lin.to.save.residualized$rhs),]
+test = factor(grepl('heart',g.heart.brain$rhs))
+levels(test) = c('brain','heart')
+g.heart.brain$class = test
+g.heart.brain$sig = (g.heart.brain$pvalue_adj < 0.01) & (!is.na(g.heart.brain$pvalue_adj))
+```
+
+```{r}
+ggplot(g.heart.brain, aes(x = class, y = r)) + 
+  geom_boxplot() + 
+  geom_point(aes(alpha=sig), position = position_jitter(0.1)) + 
+  ylab("R-squared") + 
+  scale_alpha_discrete('significant',labels=c('False','True')) +
+  ggtitle('g') + 
+  scale_y_continuous(breaks=seq(0,0.1,0.02),limits=c(0,0.1)) +
+  theme_classic()+ 
+    theme(
+  axis.title.x = element_blank(),
+  axis.ticks.x = element_blank(),
+  plot.title = element_text(face='bold',hjust = 0.5))
+ggsave('figures/analysis/linear.g.residualized.png')
 ```

@@ -44,7 +44,7 @@ brain.model$cov_pos_x = all.features$cov_pos_x
 brain.model$cov_pos_y = all.features$cov_pos_y
 brain.model$cov_pos_z = all.features$cov_pos_z
 for(latent in colnames(brain)) {
-  lin.model = paste(c(latent," ~ cov_headsize + cov_pos_x + cov_pos_y + cov_pos_z"),collapse='')
+  lin.model = paste(c(latent," ~ -cov_headsize + cov_pos_x + cov_pos_y + cov_pos_z"),collapse='')
   brain.residualized[,latent] = rstandard(lm(lin.model, brain.model))
 }
 brain = data.frame(scale(brain))
@@ -92,17 +92,17 @@ get.nickname = function(name) {
 ```{r}
 brain.des = brain.ind.frame[brain.ind.frame$lhs == 'de',]
 brain.des$pvalue_adj = p.adjust(brain.des$pvalue,'BH')
-brain.des$nickname = sapply(brain.des$mediator, get.nickname)
+brain.des$feature = sapply(brain.des$mediator, get.nickname)
 ```
 
 ```{r}
 brain.des$sig = brain.des$pvalue_adj < 0.05
-ggplot(brain.des, aes(x = nickname, y = est.std, fill = nickname)) + 
+ggplot(brain.des, aes(x = feature, y = est.std, fill = feature)) + 
   geom_boxplot() + 
   geom_point(position = position_jitter(0.1)) + 
   ylab("direct effect") + 
   scale_alpha_discrete('significant',labels=c('True','False')) + 
-  scale_y_continuous(breaks=seq(-0.05,0.05,0.05),limits=c(-0.07,0.07)) +
+  scale_y_continuous(breaks=seq(-0.05,0.05,0.05),limits=c(-0.075,0.075)) +
   theme_classic()+ 
     theme(
   axis.title.x = element_blank(),
@@ -119,17 +119,17 @@ write.csv(brain.des,"tables/analysis/direct.individual.single.brain.csv")
 ```{r}
 brain.ies = brain.ind.frame[brain.ind.frame$lhs == 'ie',]
 brain.ies$pvalue_adj = p.adjust(brain.ies$pvalue,'BH')
-brain.ies$nickname = sapply(brain.ies$mediator, get.nickname)
+brain.ies$feature = sapply(brain.ies$mediator, get.nickname)
 ```
 
 ```{r}
 brain.ies$sig = (brain.ies$pvalue_adj < 0.05) & (!is.na(brain.ies$pvalue_adj))
-ggplot(brain.ies, aes(x = nickname, y = est.std, fill = nickname)) + 
+ggplot(brain.ies, aes(x = feature, y = est.std, fill = feature)) + 
   geom_boxplot() + 
   geom_point(aes(alpha=sig), position = position_jitter(0.1)) + 
   ylab("indirect effect") + 
   scale_alpha_discrete('significant',labels=c('False','True')) + 
-  scale_y_continuous(breaks=seq(-0.005,0.005,0.005),limits=c(-0.01,0.01)) +
+  scale_y_continuous(breaks=seq(-0.01,0.01,0.01),limits=c(-0.015,0.015)) +
   theme_classic()+ 
     theme(
   axis.title.x = element_blank(),
@@ -141,6 +141,11 @@ ggsave('figures/analysis/indirect.individual.single.brain.png')
 ```{r}
 write.csv(brain.ies,"tables/analysis/indirect.individual.single.brain.csv")
 ```
+
+```{r}
+write.csv(brain.ind.frame,"tables/analysis/mediation.individual.single.brain.csv")
+```
+
 
 # Individual Brain Feature Mediation Residualized
 ```{r}
@@ -164,17 +169,17 @@ brain.ind.frame.resid = bind_rows(ind.results.brain.resid, .id = "mediator")
 ```{r}
 brain.des.resid = brain.ind.frame.resid[brain.ind.frame.resid$lhs == 'de',]
 brain.des.resid$pvalue_adj = p.adjust(brain.des.resid$pvalue,'BH')
-brain.des.resid$nickname = sapply(brain.ies$mediator, get.nickname)
+brain.des.resid$feature = sapply(brain.ies$mediator, get.nickname)
 ```
 
 ```{r}
 brain.des.resid$sig = brain.des.resid$pvalue_adj < 0.05
-ggplot(brain.des.resid, aes(x = nickname, y = est.std, fill = nickname)) + 
+ggplot(brain.des.resid, aes(x = nickname, y = est.std, fill = feature)) + 
   geom_boxplot() + 
   geom_point( position = position_jitter(0.1)) + 
   ylab("direct effect") + 
   scale_alpha_discrete('significant',labels=c('False','True')) + 
-  scale_y_continuous(breaks=seq(-0.05,0.05,0.05),limits=c(-0.07,0.07)) +
+  scale_y_continuous(breaks=seq(-0.05,0.05,0.05),limits=c(-0.075,0.075)) +
   theme_classic()+ 
     theme(
   axis.title.x = element_blank(),
@@ -192,17 +197,17 @@ write.csv(brain.des,"tables/analysis/direct.individual.single.brain.residualized
 ```{r}
 brain.ies.resid = brain.ind.frame.resid[brain.ind.frame.resid$lhs == 'ie',]
 brain.ies.resid$pvalue_adj = p.adjust(brain.ies.resid$pvalue,'BH')
-brain.ies.resid$nickname = sapply(brain.ies.resid$mediator, get.nickname)
+brain.ies.resid$feature = sapply(brain.ies.resid$mediator, get.nickname)
 ```
 
 ```{r}
 brain.ies.resid$sig = (brain.ies.resid$pvalue_adj < 0.05) & (!is.na(brain.ies.resid$pvalue_adj))
-ggplot(brain.ies.resid, aes(x = nickname, y = est.std, fill = nickname)) + 
+ggplot(brain.ies.resid, aes(x = feature, y = est.std, fill = feature)) + 
   geom_boxplot() + 
   geom_point(aes(alpha=sig), position = position_jitter(0.1)) + 
   ylab("indirect effect") + 
   scale_alpha_discrete('significant',labels=c('False','True')) + 
-  scale_y_continuous(breaks=seq(-0.005,0.005,0.005),limits=c(-0.01,0.01)) +
+  scale_y_continuous(breaks=seq(-0.01,0.01,0.01),limits=c(-0.015,0.015)) +
   theme_classic()+ 
     theme(
   axis.title.x = element_blank(),
@@ -214,3 +219,8 @@ ggsave('figures/analysis/indirect.individual.single.brain.residualized.png')
 ```{r}
 write.csv(brain.ies,"tables/analysis/indirect.individual.single.brain.residualized.csv")
 ```
+
+```{r}
+write.csv(brain.ind.frame.resid,"tables/analysis/mediation.individual.single.brain.residualized.csv")
+```
+
