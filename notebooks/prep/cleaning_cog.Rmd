@@ -38,7 +38,7 @@ missing_pattern(cog)
 ```
 
 ```{r}
-cog.final = cog[complete.cases(cog),]
+cog.final = cog[rowSums(is.na(cog)) < 2,]
 cog.final = cog.final %>% select(f.eid, everything())
 ```
 

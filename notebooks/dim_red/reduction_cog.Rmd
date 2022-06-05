@@ -31,7 +31,7 @@ cog.merged = vrf.cog.heart.brain.trad[,grep("cog_",colnames(vrf.cog.heart.brain.
 ```{r}
 cog.merged = data.frame(lapply(cog.merged,as.numeric))
 g = paste(c("g=~",colnames(cog.merged)),collapse="+")
-g_cfa = cfa(g, cog.merged)
+g_cfa = cfa(g, cog.merged,missing='ML')
 ```
 
 ```{r}

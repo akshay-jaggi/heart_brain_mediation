@@ -129,7 +129,7 @@ missing_pattern(vrfs)
 
 
 ```{r}
-vrfs.final = vrfs[complete.cases(vrfs),]
+vrfs.final = vrfs[rowSums(is.na(vrfs)) < 4, ] #vrfs[complete.cases(vrfs),]
 vrfs.final = vrfs.final %>% dplyr::select(f.eid, everything())
 ```
 
@@ -137,6 +137,7 @@ vrfs.final = vrfs.final %>% dplyr::select(f.eid, everything())
 ```{r}
 write.csv(vrfs.final,'data_derived/cleaned/vrfs_cleaned.csv', row.names = FALSE)
 ```
+
 
 
 

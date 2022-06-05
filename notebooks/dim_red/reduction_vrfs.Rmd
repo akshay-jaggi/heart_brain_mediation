@@ -63,7 +63,7 @@ cardio_hypertension ~~ cardio_hyperchol
 cardio_dbp ~~ cardio_bmi
 "
 cardio_cfa_input = paste(c(gvrf,cardio_covariances),collapse="\n")
-gvrf_cfa = cfa(cardio_cfa_input, vrfs.merged)
+gvrf_cfa = cfa(cardio_cfa_input, vrfs.merged,missing='ML')
 ```
 
 ```{r}
@@ -90,7 +90,7 @@ semPaths(gvrf_cfa,what="std",fade=FALSE,nodeLabels=labels,edge.label.cex=1,sizeM
 ```{r}
 vrfs.cor = cor(vrfs.merged)
 colnames(vrfs.cor) = sapply(colnames(vrfs.cor),function(x) strsplit(x,'_')[[1]][2])
-heatmap.with.labels(vrfs.cor)
+heatmap.with.labels(vrfs.cor,min=-10,max=10,label='correlation')
 ggsave('figures/dim_red/vrf.cor.png')
 ```
 
