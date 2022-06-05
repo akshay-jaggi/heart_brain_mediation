@@ -27,13 +27,37 @@ vrf.cog.heart.brain.trad = read.csv('data_derived/merged/vrf.cog.heart.brain.tra
 
 ```{r}
 merged.heart = vrf.cog.heart.brain.trad[,grep("heart_",colnames(vrf.cog.heart.brain.trad))]
+merged.heart.zscore = scale(merged.heart)
 ```
+
 
 # PCA
 ```{r}
-heart.pca = prcomp(merged.heart, center = TRUE, scale = TRUE)
+heart.pca = prcomp(merged.heart.zscore, center = FALSE, scale = FALSE)
 heart.variances = summary(heart.pca)$importance
 ```
+
+```{r}
+#Varimax
+ncomp = 3
+raw.loadings      = heart.pca$rotation[,1:ncomp] %*% diag(heart.pca$sdev, ncomp, ncomp)
+rotated.loadings  = varimax(raw.loadings)$loadings
+inv.loadings      = t(pracma::pinv(rotated.loadings))
+heart.varimax.scores = scale(merged.heart.zscore) %*% inv.loadings
+```
+
+```{r}
+write.csv(rotated.loadings ,"tables/dim_red/heart.varimax.loadings.csv")
+```
+
+
+```{r}
+#Explained variances before and after Varimax
+evr_orth(merged.heart.zscore, heart.pca$x[,1:3])
+evr_nonorth(merged.heart.zscore, data.frame(heart.varimax.scores))
+```
+
+
 
 ```{r}
 png("figures/dim_red/heart.eigs.png")
@@ -44,9 +68,9 @@ dev.off()
 
 ```{r}
 heart.latents = data.frame('f.eid'=vrf.cog.heart.brain.trad$f.eid)
-heart.latents$heart_latent_pc1 = heart.pca$x[,1]
-heart.latents$heart_latent_pc2 = heart.pca$x[,2]
-heart.latents$heart_latent_pc3 = heart.pca$x[,3]
+heart.latents$heart_latent_pc1 = heart.varimax.scores[,1]
+heart.latents$heart_latent_pc2 = heart.varimax.scores[,2]
+heart.latents$heart_latent_pc3 = heart.varimax.scores[,3]
 ```
 
 ```{r}

@@ -60,7 +60,7 @@ write.csv(standardizedSolution(gMD_cfa),"tables/dim_red/gmd_cfa.csv")
 ```{r}
 brain.md.cor = cor(merged.brain.md[,order(colnames(merged.brain.md))])
 colnames(brain.md.cor) = as.character(tract.names$name)
-heatmap.with.labels(brain.md.cor)
+heatmap.with.labels(brain.md.cor,min=-1,max=1,'correlation')
 ggsave('figures/dim_red/md.cor.png')
 ```
 
@@ -100,7 +100,7 @@ write.csv(standardizedSolution(gfa_cfa),"tables/dim_red/gfa_cfa.csv")
 ```{r}
 brain.fa.cor = cor(merged.brain.fa[,order(colnames(merged.brain.fa))])
 colnames(brain.fa.cor) = as.character(tract.names$name)
-heatmap.with.labels(brain.fa.cor)
+heatmap.with.labels(brain.fa.cor,min=-1,max=1,'correlation')
 ggsave('figures/dim_red/fa.cor.png')
 ```
 
@@ -116,13 +116,22 @@ brain.variances = summary(brain.pca)$importance
 ```
 
 ```{r}
+#Varimax
+ncomp = 3
+raw.loadings      = brain.pca$rotation[,1:ncomp] %*% diag(brain.pca$sdev, ncomp, ncomp)
+rotated.loadings  = varimax(raw.loadings)$loadings
+inv.loadings      = t(pracma::pinv(rotated.loadings))
+brain.varimax.scores = scale(merged.brain.new) %*% inv.loadings
+```
+
+```{r}
 png("figures/dim_red/brain.eigs.png")
 fviz_eig(brain.pca,ncp=10) 
 dev.off()
 ```
 
 ```{r}
-write.csv(brain.pca$rotation[,1:3],"tables/dim_red/brain.pca.loadings.csv")
+write.csv(rotated.loadings,"tables/dim_red/brain.varimax.loadings.csv")
 ```
 
 ```{r}
@@ -145,9 +154,9 @@ brain.latents$brain_latent_grey = merged.data.complete$brain_grey
 brain.latents$brain_latent_atrophy = merged.data.complete$brain_atrophy
 brain.latents$brain_latent_gMD = predict(gMD_cfa)
 brain.latents$brain_latent_gFA = predict(gfa_cfa)
-brain.latents$brain_latent_pc1 = brain.pca$x[,1]
-brain.latents$brain_latent_pc2 = brain.pca$x[,2]
-brain.latents$brain_latent_pc3 = brain.pca$x[,3]
+brain.latents$brain_latent_pc1 = brain.varimax.scores[,1]
+brain.latents$brain_latent_pc2 = brain.varimax.scores[,2]
+brain.latents$brain_latent_pc3 = brain.varimax.scores[,3]
 ```
 
 ```{r}

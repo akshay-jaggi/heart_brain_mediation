@@ -5,6 +5,25 @@ project = function(data.matrix, latent.matrix) {
   return(data.projected)
 }
 
+ev_ = function(data.matrix, latent.matrix) {
+  data.projected = project(data.matrix, latent.matrix)
+  data.orth = data.matrix - data.projected
+  ev = sum(apply(data.matrix,2,var)) - sum(apply(data.orth,2,var))
+  return(ev)
+}
+
+ev = function(dataset, latent) {
+  data.matrix = as.matrix(dataset)
+  latent.matrix = as.matrix(latent)
+  return(ev_(data.matrix, latent.matrix))
+}
+
+ev_orth = function(dataset, latents) {
+  data.matrix = as.matrix(dataset)
+  evs = apply(latents, 2, function(x) ev(data.matrix, as.matrix(x)))
+  return(list(evs, sum(evs)))
+}
+
 evr_ = function(data.matrix, latent.matrix) {
   data.projected = project(data.matrix, latent.matrix)
   data.orth = data.matrix - data.projected
