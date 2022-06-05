@@ -2,7 +2,7 @@
  Dimensionality Reduction and Mediation Modeling of Heart/Brain Data in UK Biobank
 
 ## notebooks
-Contains all the notebooks necessary to run all the code to generate the paper tables and figures
+Contains all the notebooks necessary to run all the code to generate the paper tables and figures.
 I plan on converting everything to scripts at the end, so we can more easily just 'hit run' and have everything run consecutively. 
 Right now, here's the sequencing of how all notebooks can be run to replicate analyses start to finish. I recommend always clearing your Rmd variable space before running each notebook. Each is designed to run start to finish without needing variables from other notebooks. 
 Also, yes, I realize that I've been flip-flopping between the . and _ naming conventions. I'm a python fan at heart, but I've been trying to adapt to R. 
@@ -42,3 +42,9 @@ Each notebook is dedicated to specific figure / section of the paper
 /analysis/latent.multiple.mediation.Rmd
 /analysis/individual.single.mediation.brain.Rmd
 /analysis/individual.single.mediation.heart.Rmd
+
+## functions
+I generated a handful of custom functions for making heatmaps and calculating explained variance. These functions are very reusable, so I ultimately ended up packaging them into their own functions. 
+
+## figures and tables
+All the figures and tables for the paper can be found here. In the final publication version of the repo, I'll probably leave these empty, but for now I'm keeping stuff there. 
