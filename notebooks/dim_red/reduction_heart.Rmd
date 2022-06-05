@@ -68,6 +68,9 @@ heatmap.with.tree(heart.cor,heart.groups,side.colors)
 #dev.off()
 ```
 
+```{r}
+side.colors
+```
 
 ```{r}
 heart.scaled = scale(merged.heart)
