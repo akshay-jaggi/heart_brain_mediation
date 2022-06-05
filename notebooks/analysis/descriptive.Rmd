@@ -106,3 +106,60 @@ write.csv(latents.covariates.residualized,
           'data_derived/merged/latents.covariates.residualized.scaled.csv')
 ```
 
+# Age Plots
+```{r}
+latents.covariates.residualized[,c('cov_age',
+                                   colnames(latents.covariates)[
+                                     grepl('pc',colnames(latents.covariates)) &
+                                       grepl('heart|brain',colnames(latents.covariates))
+                                     ])] %>% 
+  tidyr::gather(variable, value, -cov_age) %>%
+  ggplot(aes(x=cov_age, y = value)) +
+  geom_point(alpha=0.1) +
+  geom_smooth(method=lm)+ ylim(-7,7) + xlab('age') + ylab('normalized residual') + 
+  facet_wrap(~ variable)  + 
+  theme_classic()
+ggsave('figures/analysis/age.pcs.png')
+```
+```{r}
+latents.covariates.residualized[,c('cov_age',
+                                   colnames(latents.covariates)[
+                                     grepl('cc',colnames(latents.covariates)) &
+                                       grepl('heart|brain',colnames(latents.covariates))
+                                     ])] %>% 
+  tidyr::gather(variable, value, -cov_age) %>%
+  ggplot(aes(x=cov_age, y = value)) +
+  geom_point(alpha=0.1) +
+  geom_smooth(method=lm)+ ylim(-7,7) + xlab('age') + ylab('normalized residual') + 
+  facet_wrap(~ variable)  + 
+  theme_classic()
+ggsave('figures/analysis/age.ccs.png')
+```
+```{r}
+test = latents.covariates.residualized %>% 
+  select(c('cov_age','brain_latent_atrophy','brain_latent_grey',
+                                   'brain_latent_gFA','brain_latent_gMD')) %>% 
+  tidyr::gather(variable, value, -cov_age)
+test$variable = factor(test$variable, levels = c('brain_latent_atrophy','brain_latent_grey',
+                                   'brain_latent_gFA','brain_latent_gMD'))
+test %>%
+ ggplot(aes(x=cov_age, y = value)) +
+  geom_point(alpha=0.1) +
+  geom_smooth(method=lm)+ ylim(-7,7) + xlab('age') + ylab('normalized residual') + 
+  facet_wrap(~ variable)  + 
+  theme_classic()
+ggsave('figures/analysis/age.brain.png')
+```
+
+```{r}
+latents.covariates.residualized %>% 
+  select(c('cov_age','cardio_latent_gvrf','cog_latent_g')) %>% 
+  tidyr::gather(variable, value, -cov_age) %>%
+ ggplot(aes(x=cov_age, y = value)) +
+  geom_point(alpha=0.1) +
+  geom_smooth(method=lm)+ ylim(-7,7) + xlab('age') + ylab('normalized residual') + 
+  facet_wrap(~ variable)  + 
+  theme_classic()
+ggsave('figures/analysis/age.ends.png')
+```
+

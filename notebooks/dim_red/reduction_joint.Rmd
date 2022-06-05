@@ -138,9 +138,25 @@ evr_nonorth(merged.heart.zscore, heart.ccs[,2:ncol(heart.ccs)])
 ```
 
 ```{r}
-evr_orth(merged.heart.zscore, heart.ccs[,2:ncol(heart.ccs)])
+heart.evrs = evr_orth(merged.heart.zscore, heart.ccs[,2:ncol(heart.ccs)])
 ```
 
 ```{r}
-evr_orth(merged.brain.zscore, brain.ccs[,2:ncol(brain.ccs)])
+ggplot() + 
+  geom_line(aes(x=seq(1,10),y=heart.evrs[[1]])) + 
+  theme_classic() + labs(y='Explained Variance Ratio', x='Covariate Number') + 
+  scale_x_continuous(breaks=seq(1,10,1))
+ggsave('figures/dim_red/cca.evrs.heart.png')
+```
+
+```{r}
+brain.evrs = evr_orth(merged.brain.zscore, brain.ccs[,2:ncol(brain.ccs)])
+```
+
+```{r}
+ggplot() + 
+  geom_line(aes(x=seq(1,10),y=brain.evrs[[1]])) + 
+  theme_classic() + labs(y='Explained Variance Ratio', x='Covariate Number') + ylim(0,0.2) + 
+  scale_x_continuous(breaks=seq(1,10,1))
+ggsave('figures/dim_red/cca.evrs.brain.png')
 ```
