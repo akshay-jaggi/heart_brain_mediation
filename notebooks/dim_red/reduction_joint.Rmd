@@ -34,8 +34,8 @@ merged.brain.zscore = data.frame(scale(merged.brain))
 ```
 
 ```{r}
-write.csv(merged.brain.zscore,'data_derived/dim_red/brain.csv',row.names = FALSE)
-write.csv(merged.heart.zscore,'data_derived/dim_red/heart.csv',row.names = FALSE)
+write.csv(merged.brain,'data_derived/dim_red/brain.nozscore.csv',row.names = FALSE)
+write.csv(merged.heart,'data_derived/dim_red/heart.nozscore.csv',row.names = FALSE)
 ```
 
 
