@@ -137,7 +137,7 @@ ggsave('figures/analysis/age.ccs.png')
 ```
 ```{r}
 test = latents.covariates.residualized %>% 
-  select(c('cov_age','brain_latent_atrophy','brain_latent_grey',
+  dplyr::select(c('cov_age','brain_latent_atrophy','brain_latent_grey',
                                    'brain_latent_gFA','brain_latent_gMD')) %>% 
   tidyr::gather(variable, value, -cov_age)
 test$variable = factor(test$variable, levels = c('brain_latent_atrophy','brain_latent_grey',
@@ -153,7 +153,7 @@ ggsave('figures/analysis/age.brain.png')
 
 ```{r}
 latents.covariates.residualized %>% 
-  select(c('cov_age','cardio_latent_gvrf','cog_latent_g')) %>% 
+  dplyr::select(c('cov_age','cardio_latent_gvrf','cog_latent_g')) %>% 
   tidyr::gather(variable, value, -cov_age) %>%
  ggplot(aes(x=cov_age, y = value)) +
   geom_point(alpha=0.1) +
