@@ -187,12 +187,11 @@ gvrf.heart.brain$sig = (gvrf.heart.brain$pvalue_adj < 0.01) & (!is.na(gvrf.heart
 
 ```{r}
 ggplot(gvrf.heart.brain, aes(x = class, y = r)) + 
-  geom_boxplot() + 
+  geom_boxplot(outlier.shape = NA) + 
   geom_point(aes(alpha=sig), position = position_jitter(0.1)) + 
   ylab("R-squared") + 
   scale_alpha_discrete('significant',labels=c('False','True')) + ylim(0,0.5) +
   ggtitle('gVRF') + 
-  #scale_y_continuous(breaks=seq(-0.01,0.01,0.01),limits=c(-0.015,0.015)) +
   theme_classic()+ 
     theme(
   axis.title.x = element_blank(),
