@@ -1,0 +1,148 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+# Set Up
+```{r setup}
+knitr::opts_knit$set(root.dir = normalizePath("../.."))
+```
+
+# Imports
+```{r}
+library(MatchIt)
+library(dplyr)
+library(ggplot2)
+library(gplots)
+```
+
+# Load Data
+```{r}
+latents = read.csv('data_derived/merged/latents.csv')
+all.features = 
+  read.csv('data_derived/merged/vrf.cog.heart.brain.new.healthy.csv')
+```
+
+
+# Propensity Score Matching
+```{r}
+features.with.agg = merge(all.features, select(latents,c('f.eid','cardio_latent_agg')), by='f.eid')
+subjects.to.match = features.with.agg[features.with.agg$cardio_latent_agg == 0 | 
+                                        features.with.agg$cardio_latent_agg >= 5,]
+subjects.to.match$case = factor(ifelse(subjects.to.match$cardio_latent_agg == 0,"Control","Risk"))
+```
+
+## Unpaired T-Tests
+
+```{r}
+heart.match.model <- matchit(case ~ cov_age + cov_bsa,
+                     method = "nearest", exact = 'cov_sex', distance = "glm", data = subjects.to.match)
+summary(heart.match.model)
+subjects.matched.heart = match.data(heart.match.model)
+```
+
+```{r}
+heart.features = colnames(subjects.matched.heart)[grep('heart_',colnames(subjects.matched.heart))]
+heart.ttest.list = list()
+for(feature in heart.features) {
+  heart.ttest.list[[feature]] = t.test(as.formula(paste(feature,"~ case",sep='')), subjects.matched.heart)
+}
+heart.ttests = data.frame(t(sapply(heart.ttest.list, function(x) c(x$estimate[1], x$estimate[2], 
+                                   ci.lower = x$conf.int[1],ci.upper = x$conf.int[2],
+                                   p.value = x$p.value))))
+heart.ttests$pvalue_adj = p.adjust(heart.ttests$p.value,'BH')
+heart.ttests$diff = heart.ttests$mean.in.group.Risk - heart.ttests$mean.in.group.Control
+heart.ttests$percent.diff = 100 *
+  (heart.ttests$mean.in.group.Risk - heart.ttests$mean.in.group.Control) /heart.ttests$mean.in.group.Control
+```
+
+```{r}
+brain.match.model <- matchit(case ~ cov_age + cov_headsize + cov_bsa,
+                     method = "nearest", exact = 'cov_sex', distance = "glm", data = subjects.to.match)
+summary(brain.match.model)
+subjects.matched.brain = match.data(brain.match.model)
+```
+
+```{r}
+brain.features = colnames(subjects.matched.brain)[grep('brain_',colnames(subjects.matched.brain))]
+brain.ttest.list = list()
+for(feature in brain.features) {
+  brain.ttest.list[[feature]] = t.test(as.formula(paste(feature,"~ case",sep='')), subjects.matched.brain)
+}
+brain.ttests = data.frame(t(sapply(brain.ttest.list, function(x) c(x$estimate[1], x$estimate[2], 
+                                   ci.lower = x$conf.int[1],ci.upper = x$conf.int[2],
+                                   p.value = x$p.value))))
+brain.ttests$pvalue_adj = p.adjust(brain.ttests$p.value,'BH')
+brain.ttests$diff = brain.ttests$mean.in.group.Risk - brain.ttests$mean.in.group.Control
+brain.ttests$percent.diff =  100 *
+  (brain.ttests$mean.in.group.Risk - brain.ttests$mean.in.group.Control) / brain.ttests$mean.in.group.Control
+```
+
+```{r}
+cog.match.model <- matchit(case ~ cov_age + cov_headsize + cov_bsa,
+                     method = "nearest", exact = 'cov_sex', distance = "glm", data = subjects.to.match)
+summary(cog.match.model)
+subjects.matched.cog = match.data(cog.match.model)
+```
+
+```{r}
+cog.features = colnames(subjects.matched.cog)[grep('cog_',colnames(subjects.matched.cog))]
+cog.ttest.list = list()
+for(feature in cog.features) {
+  cog.ttest.list[[feature]] = t.test(as.formula(paste(feature,"~ case",sep='')), subjects.matched.cog)
+}
+cog.ttests = data.frame(t(sapply(cog.ttest.list, function(x) c(x$estimate[1], x$estimate[2], 
+                                   ci.lower = x$conf.int[1],ci.upper = x$conf.int[2],
+                                   p.value = x$p.value))))
+cog.ttests$pvalue_adj = p.adjust(cog.ttests$p.value,'BH')
+cog.ttests$diff = cog.ttests$mean.in.group.Risk - cog.ttests$mean.in.group.Control
+cog.ttests$percent.diff =  100 *
+  (cog.ttests$mean.in.group.Risk - cog.ttests$mean.in.group.Control) /cog.ttests$mean.in.group.Control
+```
+
+
+
+## Paired T-Tests (Probably not doing this)
+
+```{r}
+subjects.sorted = subjects.matched[order(subjects.matched$subclass, subjects.matched$case),]
+```
+
+```{r}
+heart.features = colnames(subjects.matched)[grep('heart_',colnames(subjects.matched))]
+heart.pttest.list = list()
+for(feature in heart.features) {
+  heart.pttest.list[[feature]] = t.test(subjects.sorted[!subjects.sorted$case,][[feature]],
+                                       subjects.sorted[subjects.sorted$case,][[feature]],paired=TRUE)
+}
+heart.pttests = data.frame(t(sapply(heart.pttest.list, function(x) c(x$estimate[1],
+                                   ci.lower = x$conf.int[1],ci.upper = x$conf.int[2],
+                                   p.value = x$p.value))))
+heart.pttests$pvalue_adj = p.adjust(heart.pttests$p.value,'BH')
+```
+
+```{r}
+brain.features = colnames(subjects.matched)[grep('brain_',colnames(subjects.matched))]
+brain.pttest.list = list()
+for(feature in brain.features) {
+  brain.pttest.list[[feature]] = t.test(subjects.sorted[!subjects.sorted$case,][[feature]],
+                                       subjects.sorted[subjects.sorted$case,][[feature]],paired=TRUE)
+}
+brain.pttests = data.frame(t(sapply(brain.pttest.list, function(x) c(x$estimate[1], 
+                                   ci.lower = x$conf.int[1],ci.upper = x$conf.int[2],
+                                   p.value = x$p.value))))
+brain.pttests$pvalue_adj = p.adjust(brain.pttests$p.value,'BH')
+```
+
+```{r}
+cog.features = colnames(subjects.matched)[grep('cog_',colnames(subjects.matched))]
+cog.pttest.list = list()
+for(feature in cog.features) {
+  cog.pttest.list[[feature]] = t.test(subjects.sorted[!subjects.sorted$case,][[feature]],
+                                       subjects.sorted[subjects.sorted$case,][[feature]],paired=TRUE)
+}
+cog.pttests = data.frame(t(sapply(cog.pttest.list, function(x) c(x$estimate[1],  
+                                   ci.lower = x$conf.int[1],ci.upper = x$conf.int[2],
+                                   p.value = x$p.value))))
+cog.pttests$pvalue_adj = p.adjust(cog.pttests$p.value,'BH')
+```
