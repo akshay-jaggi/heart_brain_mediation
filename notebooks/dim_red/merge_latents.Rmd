@@ -28,7 +28,7 @@ brain.ccs = read.csv('data_derived/dim_red/latents_brain_ccs.csv')[,1:4]
 
 # Merge
 ```{r}
-all.latents = list(vrf.latents, cog.latents, heart.latents, brain.latents, heart.ccs, brain.ccs)
+all.latents = list(vrf.latents, cog.latents, heart.latents, brain.latents)#, #heart.ccs, brain.ccs)
 merged.latents = all.latents %>% 
   purrr::reduce(inner_join,by="f.eid")
 merged.latents = merged.latents %>% 

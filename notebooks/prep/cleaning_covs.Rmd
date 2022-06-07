@@ -20,15 +20,22 @@ library(dplyr)
 ```{r}
 cardio.data = read.csv("data/cardio.data.csv")
 brain.confounders = read.csv('data/brain.confounders.csv')
-disease.status  = read.csv('data/disease.status.csv')
+heart.disease.status  = read.csv('data/heart.disease.csv')
+brain.disease.status  = read.csv('data/brain.disease.csv')
 bsa = read.csv('data/bsa.csv')
 ```
 
-# Process Conditions
+# Process Heart Conditions
 ```{r}
-disease.status$cov_nosevere = apply(disease.status[,2:ncol(disease.status)],1,function(x) !any(x))
-disease.status.tomerge = disease.status[,c('f.eid','cov_nosevere')]
+heart.disease.status$cov_nosevere = apply(heart.disease.status[,2:ncol(heart.disease.status)],1,function(x) !any(x))
+heart.disease.status.tomerge = heart.disease.status[,c('f.eid','cov_nosevere')]
 ```
+
+# Rename Brain Conditions
+```{r}
+brain.disease.status = dplyr::rename(brain.disease.status, cov_braindisease = neuro_self_report)
+```
+
 
 # Gather Data
 ```{r}
@@ -41,7 +48,7 @@ brain.covs = brain.confounders[,grepl('f.eid',colnames(brain.confounders)) |
 
 # Merge
 ```{r}
-cov.frames = list(cov.data, brain.covs, disease.status.tomerge, bsa)
+cov.frames = list(cov.data, brain.covs, heart.disease.status.tomerge, bsa, brain.disease.status)
 merged.covs = 
   cov.frames %>% 
   purrr::reduce(inner_join,by="f.eid")
@@ -52,6 +59,7 @@ merged.covs = merged.covs %>% select(f.eid, everything())
 ```{r}
 missing_pattern(merged.covs)
 ```
+
 ```{r}
 merged.covs.final = merged.covs[complete.cases(merged.covs),]
 merged.covs.final = merged.covs.final %>% select(f.eid, everything())
