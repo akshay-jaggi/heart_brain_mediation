@@ -72,8 +72,7 @@ fitMeasures(gvrf_cfa, c("cfi","tli","rmsea","srmr"))
 
 
 
-# Save SEM Paramters
-
+# Save all SEM Paramters
 ```{r}
 write.csv(standardizedSolution(gvrf_cfa),"tables/dim_red/gvrf_cfa.csv")
 ```
