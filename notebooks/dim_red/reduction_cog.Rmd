@@ -64,29 +64,7 @@ cog.aggregate$cog_latent_g = predict(g_cfa)
 ```
 
 
-# PCA for g
-```{r}
-cog.pca = prcomp(cog.merged, center=TRUE, scale=TRUE)
-```
-
-```{r}
-png("figures/dim_red/cog.eigs.png")
-fviz_eig(cog.pca)
-dev.off()
-```
-
-```{r}
-cog.aggregate$cog_latent_pc1 = cog.pca$x[,1]
-```
-
-```{r}
-write.csv(cog.pca$rotation,"tables/dim_red/cog.pca.loadings.csv")
-```
-
 ```{r}
 write.csv(cog.aggregate,'data_derived/dim_red/latents_cog.csv',row.names = FALSE)
 ```
 
-```{r}
-evr(cog.merged, cog.aggregate[,2,drop=F])
-```
