@@ -1,0 +1,75 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+# Set Up
+```{r setup}
+knitr::opts_knit$set(root.dir = normalizePath("../.."))
+```
+
+# Imports
+```{r}
+library(MatchIt)
+library(dplyr)
+library(ggplot2)
+library(gplots)
+```
+
+```{r}
+matched.ttests = function(subjects.matched, feature.tag) {
+  features = colnames(subjects.matched)[grep(feature.tag,colnames(subjects.matched))]
+  ttest.list = list()
+  for(feature in features) {
+    ttest.list[[feature]] = t.test(as.formula(paste(feature,"~ case",sep='')), subjects.matched)
+  }
+  ttests = data.frame(t(sapply(ttest.list, function(x) c(x$estimate[1], x$estimate[2], 
+                                     ci.lower = x$conf.int[1],ci.upper = x$conf.int[2],
+                                     p.value = x$p.value))))
+  ttests$pvalue_adj = p.adjust(ttests$p.value,'BH')
+  ttests$diff = ttests$mean.in.group.Risk - ttests$mean.in.group.Control
+  ttests$percent.diff = 100 *
+    (ttests$mean.in.group.Risk - ttests$mean.in.group.Control) / ttests$mean.in.group.Control
+  return(ttests)
+}
+```
+
+
+# Load Data
+```{r}
+latents = read.csv('data_derived/merged/latents.csv')
+all.features = 
+  read.csv('data_derived/merged/vrf.cog.heart.brain.new.healthy.csv')
+```
+
+
+# Propensity Score Matching
+```{r}
+features.with.agg = merge(all.features, dplyr::select(latents,c('f.eid','cardio_latent_agg')), by='f.eid')
+subjects.to.match = features.with.agg[features.with.agg$cardio_latent_agg == 0 | 
+                                        features.with.agg$cardio_latent_agg >= 5,]
+subjects.to.match$case = factor(ifelse(subjects.to.match$cardio_latent_agg == 0,"Control","Risk"))
+```
+
+## Unpaired T-Tests
+
+```{r}
+match.model <- matchit(case ~ cov_age + cov_headsize + cov_bsa,
+                       method = "nearest", exact = 'cov_sex', distance = "glm", data = subjects.to.match)
+summary(match.model)
+subjects.matched = match.data(match.model)
+```
+
+
+```{r}
+heart.ttests = matched.ttests(subjects.matched, 'heart_')
+brain.ttests = matched.ttests(subjects.matched, 'brain_')
+cog.ttests = matched.ttests(subjects.matched, 'cog_')
+cov.ttests = matched.ttests(subjects.matched, 'cov_age|cov_sex|cov_headsize|cov_bsa')
+```
+
+
+
+
+
+

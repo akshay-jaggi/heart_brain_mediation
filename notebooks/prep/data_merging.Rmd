@@ -85,8 +85,8 @@ write.csv(merged.new,'data_derived/merged/vrf.cog.heart.brain.new.csv', row.name
 
 # Filter for Healthy
 ```{r}
-merged.trad.healthy = merged.trad[merged.trad$cov_nosevere,]
-merged.new.healthy = merged.new[merged.new$cov_nosevere,]
+merged.trad.healthy = merged.trad[merged.trad$cov_nosevere & !merged.trad$cov_braindisease,]
+merged.new.healthy = merged.new[merged.new$cov_nosevere & !merged.new$cov_braindisease,]
 ```
 
 ```{r}
