@@ -35,6 +35,27 @@ heart.pca = prcomp(merged.heart, center = TRUE, scale = TRUE)
 heart.variances = summary(heart.pca)$importance
 ```
 
+# Cross Validation
+```{r}
+heart.evrs = pca.cross.val(merged.heart, 10)
+```
+
+```{r}
+heart.evrs.mean = apply(heart.evrs, 2, mean)
+heart.evrs.se = apply(heart.evrs, 2, function(x) sd(x) / length(x))
+ggplot() + 
+  geom_line(aes(x=seq(1,10),y=heart.evrs.mean)) + 
+  geom_errorbar(aes(x = seq(1,10),
+                    ymin=heart.evrs.mean - 2 * heart.evrs.se, 
+                    ymax=heart.evrs.mean + 2 * heart.evrs.se), width=.2) + 
+  ylim(0,0.32) + 
+  theme_classic() + labs(y='Explained Variance Ratio', x='Principal Component') + 
+  scale_x_continuous(breaks=seq(1,10,1)) 
+ggsave('figures/dim_red/heart.eigs.cval.png')
+```
+```
+
+
 ```{r}
 png("figures/dim_red/heart.eigs.png")
 fviz_eig(heart.pca,ncp=10) 

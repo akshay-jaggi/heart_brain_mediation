@@ -34,8 +34,8 @@ merged.brain.zscore = data.frame(scale(merged.brain))
 ```
 
 ```{r}
-write.csv(merged.brain.zscore,'data_derived/dim_red/brain.csv',row.names = FALSE)
-write.csv(merged.heart.zscore,'data_derived/dim_red/heart.csv',row.names = FALSE)
+write.csv(merged.brain,'data_derived/dim_red/brain.nozscore.csv',row.names = FALSE)
+write.csv(merged.heart,'data_derived/dim_red/heart.nozscore.csv',row.names = FALSE)
 ```
 
 
@@ -134,13 +134,49 @@ heatmap.with.twobars(heart.brain.cor, #[order(heart.scores$X0), order(brain.scor
 # EVR
 
 ```{r}
-evr_nonorth(merged.heart.zscore, heart.ccs[,2:ncol(heart.ccs)])
+brain.evrs = read.csv('data_derived/dim_red/brain.evrs.crossval.csv',row.names=1)
+heart.evrs = read.csv('data_derived/dim_red/heart.evrs.crossval.csv',row.names=1)
+heart.brain.cors = read.csv('data_derived/dim_red/heart.brain.cors.crossval.csv',row.names=1)
 ```
 
 ```{r}
-evr_orth(merged.heart.zscore, heart.ccs[,2:ncol(heart.ccs)])
+brain.evrs.mean = apply(brain.evrs, 2, mean)
+brain.evrs.se = apply(brain.evrs, 2, function(x) sd(x) / length(x))
+ggplot() + 
+  geom_line(aes(x=seq(1,10),y=brain.evrs.mean)) + 
+  geom_errorbar(aes(x = seq(1,10),
+                    ymin=brain.evrs.mean - 2 * brain.evrs.se, 
+                    ymax=brain.evrs.mean + 2 * brain.evrs.se), width=.2) + 
+  ylim(0,0.2) + 
+  theme_classic() + labs(y='Explained Variance Ratio', x='Component Number') + 
+  scale_x_continuous(breaks=seq(1,10,1)) 
+ggsave('figures/dim_red/brain.cca.evr.cval.png')
 ```
 
 ```{r}
-evr_orth(merged.brain.zscore, brain.ccs[,2:ncol(brain.ccs)])
+heart.evrs.mean = apply(heart.evrs, 2, mean)
+heart.evrs.se = apply(heart.evrs, 2, function(x) sd(x) / length(x))
+ggplot() + 
+  geom_line(aes(x=seq(1,10),y=heart.evrs.mean)) + 
+  geom_errorbar(aes(x = seq(1,10),
+                    ymin=heart.evrs.mean - 2 * heart.evrs.se, 
+                    ymax=heart.evrs.mean + 2 * heart.evrs.se), width=.2) + 
+  ylim(0,0.2) + 
+  theme_classic() + labs(y='Explained Variance Ratio', x='Component Number') + 
+  scale_x_continuous(breaks=seq(1,10,1)) 
+ggsave('figures/dim_red/heart.cca.evr.cval.png')
+```
+
+```{r}
+cors.mean = apply(heart.brain.cors, 2, mean)
+cors.se = apply(heart.brain.cors, 2, function(x) sd(x) / length(x))
+ggplot() + 
+  geom_line(aes(x=seq(1,10),y=cors.mean)) + 
+  geom_errorbar(aes(x = seq(1,10),
+                    ymin=cors.mean - 2 * cors.se, 
+                    ymax=cors.mean + 2 * cors.se), width=.2) + 
+  ylim(0,0.8) + 
+  theme_classic() + labs(y='Correlation', x='Component Number') + 
+  scale_x_continuous(breaks=seq(1,10,1)) 
+ggsave('figures/dim_red/cca.cors.cval.png')
 ```

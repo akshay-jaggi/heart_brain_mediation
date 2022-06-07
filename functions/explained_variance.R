@@ -34,3 +34,23 @@ evr_nonorth = function(dataset, latents) {
   evr = 1 - sum(apply(data.orth,2,var)) / sum(apply(data.matrix,2,var))
   return(evr)
 }
+
+pca.cross.val = function(dataset, k=10) {
+  flds <- caret::createFolds(seq(nrow(dataset)), k = 10, list = TRUE, returnTrain = TRUE)
+  evrs = matrix(0,10,10)
+  i = 1
+  for(fld in flds) {
+    train = dataset[fld,]
+    test = dataset[-fld,]
+    train.mean = apply(train, 2, mean)
+    train.sd = apply(train, 2, sd)
+    train.zscore = sweep(sweep(train, 2, FUN='-',train.mean),2,FUN='/',train.sd)
+    test.zscore = sweep(sweep(test, 2, FUN='-',train.mean),2,FUN='/',train.sd)
+    train.pcs = prcomp(train.zscore, center = FALSE, scale = FALSE)
+    evr_out = evr_orth(test.zscore, 
+                       data.frame(as.matrix(test.zscore) %*% as.matrix(train.pcs$rotation[,1:10])))
+    evrs[i,] = evr_out[[1]]
+    i = i + 1 
+  }
+  return(evrs)
+}
