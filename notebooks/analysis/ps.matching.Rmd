@@ -68,6 +68,10 @@ cog.ttests = matched.ttests(subjects.matched, 'cog_')
 cov.ttests = matched.ttests(subjects.matched, 'cov_age|cov_sex|cov_headsize|cov_bsa')
 ```
 
+```{r}
+output = rbind(cov.ttests, cog.ttests, heart.ttests, brain.ttests)
+write.csv(output, "tables/analysis/ps.matched.ttests.csv")
+```
 
 
 
