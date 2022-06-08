@@ -74,7 +74,8 @@ write.csv(heart.latents, 'data_derived/dim_red/latents_heart.csv',row.names = FA
 ```
 
 ```{r}
-write.csv(heart.pca$rotation[,1:3],"tables/dim_red/heart.pca.loadings.csv")
+write.csv(heart.pca$rotation[,1:10],"tables/dim_red/heart.pca.loadings.csv")
+write.csv(heart.pca$rotation[,1:3],"tables/final/heart.pca.loadings.csv")
 ```
 
 ```{r}
