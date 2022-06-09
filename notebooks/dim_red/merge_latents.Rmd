@@ -26,6 +26,21 @@ heart.ccs = read.csv('data_derived/dim_red/latents_heart_ccs.csv')[,1:4]
 brain.ccs = read.csv('data_derived/dim_red/latents_brain_ccs.csv')[,1:4]
 ```
 
+# Flip the Sign of Some Features for Interpretability
+```{r}
+# Set Heart PC3 to have positive be *more complex*
+heart.latents$heart_latent_pc3 = - heart.latents$heart_latent_pc3
+# Set Brain PC2 to have positive be *more FA*
+brain.latents$brain_latent_pc2 = - brain.latents$brain_latent_pc2
+# Flip the CC1 volumes increase with greater volume
+heart.ccs$heart_latent_cc1 = - heart.ccs$heart_latent_cc1
+brain.ccs$brain_latent_cc1 = - brain.ccs$brain_latent_cc1
+# Flip the CC2 axes so that they increase with greater intensity / FA 
+heart.ccs$heart_latent_cc2 = - heart.ccs$heart_latent_cc2
+brain.ccs$brain_latent_cc2 = - brain.ccs$brain_latent_cc2
+# Flip the CC3 axes so that they increase with greater intensity / 
+```
+
 # Merge
 ```{r}
 all.latents = list(vrf.latents, cog.latents, heart.latents, brain.latents, heart.ccs, brain.ccs)
