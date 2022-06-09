@@ -170,3 +170,25 @@ latents.covariates.residualized %>%
 ggsave('figures/analysis/age.ends.png')
 ```
 
+# Demographics 
+```{r}
+all.features = 
+  read.csv('data_derived/merged/vrf.cog.heart.brain.new.healthy.csv')
+```
+
+```{r}
+all.features.to.report = all.features[,grepl('cov_sex|cov_age|cov_headsize|cov_bsa',colnames(all.features)) |
+                                        grepl('cardio|cog',colnames(all.features))]
+binary.features = grep('cardio_hypertension|cardio_diabetes|cardio_hyperchol|cog_prosmem|cov_sex',
+                       colnames(all.features.to.report))
+all.features.to.report[,binary.features] = 
+  sapply(
+    all.features.to.report[,binary.features],
+    as.logical)
+```
+
+```{r}
+summary.data.frame(all.features.to.report)
+```
+
+
