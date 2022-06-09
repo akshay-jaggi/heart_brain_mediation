@@ -45,8 +45,9 @@ mediators.to.model = function(mediators) {
   mediator.models = c()
   main.model = "cog_latent_g ~ c*cardio_latent_gvrf + cov_age + cov_sex"
   mediator.model = " * cardio_latent_gvrf + cov_age + cov_sex"
-  total.effect = 'total := c'
+  total.effect = 'te := c'
   indirect.effects = c()
+  percent.meds = c()
   covariances = c()
   counter = 1
   for(mediator in mediators) {
@@ -55,9 +56,12 @@ mediators.to.model = function(mediators) {
     specific.mediator.model = paste(mediator, " ~ ",coefa,mediator.model, sep="")
     mediator.models = c(mediator.models, specific.mediator.model)
     main.model = paste(main.model, paste(' + ', coefb,' * ', mediator, sep=""), sep="")
-    effect = paste('indirect',counter, ' := ', coefa,' * ',coefb,sep="")
+    product.term = paste(coefa,' * ',coefb,sep="")
+    effect = paste('ie',counter, ' := ', product.term, sep="")
+    percent.med = paste('pm',counter, ' := 100 * (', product.term,') / ',sep="")
     indirect.effects = c(indirect.effects, effect)
-    total.effect = paste(total.effect, ' + (',coefa,' * ',coefb,')',sep="")
+    total.effect = paste(total.effect, ' + ',product.term,sep="")
+    percent.meds = c(percent.meds, percent.med)
     if (counter < length(mediators)) {
       for (med in mediators[(counter+1):length(mediators)]) {
         covariances = c(covariances,paste(mediator, '~~',med))
@@ -65,10 +69,12 @@ mediators.to.model = function(mediators) {
     }
     counter = counter + 1
   }
+  percent.meds = paste(percent.meds, "(", stringr::str_split(total.effect,"te := ")[[1]][2], ")", sep = "")
   full.model.statement = paste(c(main.model,
                                  mediator.models,
                                  covariances,
                                  indirect.effects,
+                                 percent.meds,
                                  total.effect),collapse="\n")
   return(full.model.statement)
 }
@@ -86,12 +92,18 @@ mm.out = standardizedsolution(multiple.mediation.model)
 
 ```{r}
 mm.out$pvalue_adj = mm.out$pvalue
-mm.out$pvalue_adj[grepl('indirect',mm.out$lhs)] = p.adjust(mm.out$pvalue[grepl('indirect',mm.out$lhs)],'BH')
+mm.out$pvalue_adj[grepl('ie',mm.out$lhs)] = p.adjust(mm.out$pvalue[grepl('ie',mm.out$lhs)],'BH')
 write.csv(mm.out[mm.out$op=="~"|mm.out$op==":=",],"tables/analysis/mediation.latents.multiple.csv")
 ```
 
 ```{r}
-inds = mm.out[grepl('indirect',mm.out$lhs),]
+mm.out.final = mm.out[mm.out$label!='',]
+write.csv(mm.out.final,"tables/final/mediation.latents.multiple.csv")
+```
+
+
+```{r}
+inds = mm.out[grepl('ie',mm.out$lhs),]
 inds$mediator = mediators
 ```
 
@@ -114,13 +126,18 @@ mm.out.residualized = standardizedsolution(multiple.mediation.model.residualized
 
 ```{r}
 mm.out.residualized$pvalue_adj = mm.out.residualized$pvalue
-mm.out.residualized$pvalue_adj[grepl('indirect',mm.out.residualized$lhs)] = p.adjust(mm.out.residualized$pvalue[grepl('indirect',mm.out.residualized$lhs)],'BH')
+mm.out.residualized$pvalue_adj[grepl('ie',mm.out.residualized$lhs)] = p.adjust(mm.out.residualized$pvalue[grepl('ie',mm.out.residualized$lhs)],'BH')
 write.csv(mm.out.residualized[mm.out.residualized$op=="~"|mm.out.residualized$op==":=",],
           "tables/analysis/mediation.latents.multiple.residualized.csv")
 ```
 
 ```{r}
-inds.resid = mm.out.residualized[grepl('indirect',mm.out.residualized$lhs),]
+mm.out.residualized.final = mm.out.residualized[mm.out.residualized$label!='',]
+write.csv(mm.out.residualized.final,"tables/final/mediation.latents.multiple.residualized.csv")
+```
+
+```{r}
+inds.resid = mm.out.residualized[grepl('ie',mm.out.residualized$lhs),]
 inds.resid$mediator = mediators
 ```
 

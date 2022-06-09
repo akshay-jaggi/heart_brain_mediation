@@ -15,6 +15,7 @@ library(mice)
 library(purrr)
 library(dplyr)
 library(lavaan)
+library(ggplot2)
 ```
 
 # Load Data
@@ -54,7 +55,8 @@ write.csv(lin.cov.frame,"tables/analysis/linear.model.covariates.csv")
 ```
 
 ```{r}
-cor(latents.covariates$cov_bsa, -latents.covariates$cov_headsize)
+lin.cov.frame.final = dplyr::select(lin.cov.frame,-c('op','z','se'))
+write.csv(lin.cov.frame.final,"tables/final/linear.model.covariates.csv")
 ```
 
 
@@ -98,6 +100,11 @@ lin.cov.frame.residualized$pvalue_adj = p.adjust(lin.cov.frame.residualized$pval
 write.csv(lin.cov.frame.residualized,"tables/analysis/linear.model.covariates.residualized.csv")
 ```
 
+```{r}
+lin.cov.frame.residualized.final = dplyr::select(lin.cov.frame.residualized,-c('op','z','se'))
+write.csv(lin.cov.frame.residualized.final,"tables/final/linear.model.covariates.residualized.csv")
+```
+
 # Save the residualized data
 ```{r}
 write.csv(latents.covariates,
@@ -130,10 +137,10 @@ latents.covariates.residualized[,c('cov_age',
   tidyr::gather(variable, value, -cov_age) %>%
   ggplot(aes(x=cov_age, y = value)) +
   geom_point(alpha=0.1) +
-  geom_smooth(method=lm)+ ylim(-7,7) + xlab('age') + ylab('normalized residual') + 
+  geom_smooth(method=lm) + ylim(-7,7) + xlab('age') + ylab('normalized residual') + 
   facet_wrap(~ variable)  + 
   theme_classic()
-ggsave('figures/analysis/age.ccs.png')
+#ggsave('figures/analysis/age.ccs.png')
 ```
 ```{r}
 test = latents.covariates.residualized %>% 

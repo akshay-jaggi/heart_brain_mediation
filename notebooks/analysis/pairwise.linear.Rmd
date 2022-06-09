@@ -107,8 +107,18 @@ ggsave('figures/analysis/linear.pairwise.png')
 
 ```{r}
 lin.to.save = bind_rows(unlist(lin.model.pairwise,recursive=FALSE))
-lin.to.save$pvalue_adj = p.adjust(lin.to.save$pvalue)
-write.csv(lin.to.save[lin.to.save$rhs %in% latent.names,],"tables/analysis/linear.model.pairwise.csv")
+lin.to.save$pvalue_adj = lin.to.save$pvalue 
+lin.to.save$pvalue_adj[!grepl('cov_',lin.to.save$rhs)] = p.adjust(lin.to.save$pvalue_adj[!grepl('cov_',lin.to.save$rhs)],'BH')
+write.csv(lin.to.save[
+  lin.to.save $rhs %in% latent.names,],
+  "tables/analysis/linear.model.pairwise.csv")
+```
+
+```{r}
+lin.to.save.final = dplyr::select(lin.to.save, -c('op','z','se'))
+lin.to.save.final = lin.to.save.final[(lin.to.save$rhs %in% latent.names) & (lin.to.save$rhs != lin.to.save$lhs),]
+write.csv(lin.to.save.final,
+          "tables/final/linear.model.pairwise.csv")
 ```
 
 # Linear Model Each Variable against other variable + covariates, Residualized
@@ -175,6 +185,24 @@ write.csv(lin.to.save.residualized[
   "tables/analysis/linear.model.pairwise.residualized.csv")
 ```
 
+```{r}
+lin.to.save.residualized.final = dplyr::select(lin.to.save, -c('op','z','se'))
+lin.to.save.residualized.final = lin.to.save.residualized.final[(lin.to.save$rhs %in% latent.names) & (lin.to.save$rhs != lin.to.save$lhs),]
+write.csv(lin.to.save.residualized.final,
+          "tables/final/linear.model.pairwise.residualized.csv")
+```
+
+```{r}
+gvrf.associations.final = lin.to.save.residualized.final[grepl('gvrf',lin.to.save.residualized.final$rhs),]
+write.csv(gvrf.associations.final,
+          "tables/final/gvrf.associations.csv")
+```
+
+```{r}
+g.associations.final = lin.to.save.residualized.final[grepl('cog_latent_g',lin.to.save.residualized.final$lhs),]
+write.csv(g.associations.final,
+          "tables/final/g.associations.csv")
+```
 
 ```{r}
 gvrf.heart.brain = lin.to.save.residualized[grepl('gvrf',lin.to.save.residualized$lhs) & 
@@ -211,7 +239,7 @@ g.heart.brain$sig = (g.heart.brain$pvalue_adj < 0.01) & (!is.na(g.heart.brain$pv
 
 ```{r}
 ggplot(g.heart.brain, aes(x = class, y = r)) + 
-  geom_boxplot() + 
+  geom_boxplot(outlier.shape = NA) + 
   geom_point(aes(alpha=sig), position = position_jitter(0.1)) + 
   ylab("R-squared") + 
   scale_alpha_discrete('significant',labels=c('False','True')) +
@@ -222,5 +250,5 @@ ggplot(g.heart.brain, aes(x = class, y = r)) +
   axis.title.x = element_blank(),
   axis.ticks.x = element_blank(),
   plot.title = element_text(face='bold',hjust = 0.5))
-ggsave('figures/analysis/linear.g.residualized.png')
+#ggsave('figures/analysis/linear.g.residualized.png')
 ```

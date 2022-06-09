@@ -58,7 +58,8 @@ latents.covariates.radiomics.residualized = cbind(latents.covariates.residualize
 effects = 
 "de := c
 ie := a*b
-te := c + a*b"
+te := c + a*b
+pm := 100 * (a*b) / (c+a*b)"
 ```
 
 ```{r}
@@ -76,7 +77,7 @@ for(mediator in colnames(heart)) {
 ```
 
 ```{r}
-large.ind.frame = bind_rows(ind.results, .id = "mediator")
+heart.ind.frame = bind_rows(ind.results, .id = "mediator")
 ```
 
 ## Cluster and Display
@@ -94,7 +95,7 @@ clusters$nickname = factor(clusters$nickname,
 
 ## Direct
 ```{r}
-large.des = large.ind.frame[large.ind.frame$lhs == 'de',]
+large.des = heart.ind.frame[heart.ind.frame$lhs == 'de',]
 large.des$pvalue_adj = p.adjust(large.des$pvalue,'BH')
 ```
 
@@ -130,7 +131,7 @@ write.csv(large.des.toplot,"tables/analysis/direct.individual.single.heart.csv")
 ## Indirect
 
 ```{r}
-large.ies = large.ind.frame[large.ind.frame$lhs == 'ie',]
+large.ies = heart.ind.frame[heart.ind.frame$lhs == 'ie',]
 large.ies$pvalue_adj = p.adjust(large.ies$pvalue,'BH')
 ```
 
@@ -164,7 +165,13 @@ write.csv(large.ies.toplot,"tables/analysis/indirect.individual.single.heart.csv
 ```
 
 ```{r}
-write.csv(large.ind.frame,"tables/analysis/mediation.individual.single.heart.csv")
+write.csv(heart.ind.frame,"tables/analysis/mediation.individual.single.heart.csv")
+```
+
+```{r}
+heart.ind.frame.final = dplyr::select(heart.ind.frame, -c('se','z'))
+heart.ind.frame.final = heart.ind.frame.final[heart.ind.frame.final$label != '',]
+write.csv(heart.ind.frame.final,"tables/final/mediation.individual.single.heart.csv")
 ```
 
 ## Run Residuals
@@ -183,11 +190,11 @@ for(mediator in colnames(heart)) {
 ```
 
 ```{r}
-large.ind.frame.residualized = bind_rows(ind.results.residualized, .id = "mediator")
+heart.ind.frame.residualized = bind_rows(ind.results.residualized, .id = "mediator")
 ```
 
 ```{r}
-large.des.residualized = large.ind.frame.residualized[large.ind.frame.residualized$lhs == 'de',]
+large.des.residualized = heart.ind.frame.residualized[heart.ind.frame.residualized$lhs == 'de',]
 large.des.residualized$pvalue_adj = p.adjust(large.des.residualized$pvalue,'BH')
 ```
 
@@ -237,7 +244,7 @@ write.csv(large.des.toplot.residualized,"tables/analysis/direct.individual.singl
 ## Indirect Residualized
 
 ```{r}
-large.ies.residualized = large.ind.frame.residualized[large.ind.frame.residualized$lhs == 'ie',]
+large.ies.residualized = heart.ind.frame.residualized[heart.ind.frame.residualized$lhs == 'ie',]
 large.ies.residualized$pvalue_adj = p.adjust(large.ies.residualized$pvalue,'BH')
 ```
 
@@ -273,5 +280,7 @@ write.csv(large.ies.toplot.residualized,"tables/analysis/indirect.individual.sin
 ```
 
 ```{r}
-write.csv(large.ind.frame.residualized,"tables/analysis/mediation.individual.single.heart.residualized.csv")
+heart.ind.frame.residualized.final = dplyr::select(heart.ind.frame.residualized, -c('se','z'))
+heart.ind.frame.residualized.final = heart.ind.frame.residualized.final[heart.ind.frame.residualized.final$label != '',]
+write.csv(heart.ind.frame.residualized.final,"tables/final/mediation.individual.single.heart.residualized.csv")
 ```

@@ -51,8 +51,6 @@ subjects.to.match = features.with.agg[features.with.agg$cardio_latent_agg == 0 |
 subjects.to.match$case = factor(ifelse(subjects.to.match$cardio_latent_agg == 0,"Control","Risk"))
 ```
 
-## Unpaired T-Tests
-
 ```{r}
 match.model <- matchit(case ~ cov_age + cov_headsize + cov_bsa,
                        method = "nearest", exact = 'cov_sex', distance = "glm", data = subjects.to.match)
@@ -60,17 +58,30 @@ summary(match.model)
 subjects.matched = match.data(match.model)
 ```
 
+## Unpaired T-Tests
 
 ```{r}
 heart.ttests = matched.ttests(subjects.matched, 'heart_')
 brain.ttests = matched.ttests(subjects.matched, 'brain_')
 cog.ttests = matched.ttests(subjects.matched, 'cog_')
+cardio.ttests = matched.ttests(subjects.matched,'cardio_')
 cov.ttests = matched.ttests(subjects.matched, 'cov_age|cov_sex|cov_headsize|cov_bsa')
 ```
 
 ```{r}
-output = rbind(cov.ttests, cog.ttests, heart.ttests, brain.ttests)
-write.csv(output, "tables/analysis/ps.matched.ttests.csv")
+cardio.ttests$mean.in.group.Risk[rownames(cardio.ttests) =='cardio_hypertension'] =
+  sum(subjects.matched$cardio_hypertension)
+cardio.ttests$mean.in.group.Risk[rownames(cardio.ttests) =='cardio_diabetes'] = 
+  sum(subjects.matched$cardio_diabetes)
+cardio.ttests$mean.in.group.Risk[rownames(cardio.ttests) =='cardio_hyperchol'] = 
+  sum(subjects.matched$cardio_hyperchol)
+```
+
+
+```{r}
+ps.matched.ttests = rbind(cov.ttests, cardio.ttests, cog.ttests, heart.ttests, brain.ttests)
+write.csv(ps.matched.ttests, "tables/analysis/ps.matched.ttests.csv")
+write.csv(ps.matched.ttests, "tables/final/ps.matched.ttests.csv")
 ```
 
 

@@ -60,8 +60,11 @@ latents.covariates.brain.residualized = cbind(latents.covariates.residualized.sc
 effects = 
 "de := c
 ie := a*b
-te := c + a*b"
+te := c + a*b
+pm := 100 * (a*b) / (c+a*b)"
+```
 
+```{r}
 ind.results.brain = list()
 for(mediator in colnames(brain)) {
   med.model = paste(c(mediator," ~ a * cardio_latent_gvrf + cov_age + cov_sex\n",
@@ -110,6 +113,7 @@ ggplot(brain.des, aes(x = feature, y = est.std, fill = feature)) +
   axis.ticks.x = element_blank())
 ggsave('figures/analysis/direct.individual.single.brain.png')
 ```
+
 ```{r}
 write.csv(brain.des,"tables/analysis/direct.individual.single.brain.csv")
 ```
@@ -146,6 +150,12 @@ write.csv(brain.ies,"tables/analysis/indirect.individual.single.brain.csv")
 write.csv(brain.ind.frame,"tables/analysis/mediation.individual.single.brain.csv")
 ```
 
+```{r}
+brain.ind.frame.final = dplyr::select(brain.ind.frame, -c('se','z'))
+brain.ind.frame.final = brain.ind.frame.final[brain.ind.frame.final$label != '',]
+write.csv(brain.ind.frame.final,"tables/final/mediation.individual.single.brain.csv")
+```
+
 
 # Individual Brain Feature Mediation Residualized
 ```{r}
@@ -174,7 +184,7 @@ brain.des.resid$feature = sapply(brain.ies$mediator, get.nickname)
 
 ```{r}
 brain.des.resid$sig = brain.des.resid$pvalue_adj < 0.05
-ggplot(brain.des.resid, aes(x = nickname, y = est.std, fill = feature)) + 
+ggplot(brain.des.resid, aes(x = feature, y = est.std, fill = feature)) + 
   geom_boxplot() + 
   geom_point( position = position_jitter(0.1)) + 
   ylab("direct effect") + 
@@ -224,3 +234,8 @@ write.csv(brain.ies,"tables/analysis/indirect.individual.single.brain.residualiz
 write.csv(brain.ind.frame.resid,"tables/analysis/mediation.individual.single.brain.residualized.csv")
 ```
 
+```{r}
+brain.ind.frame.resid.final = dplyr::select(brain.ind.frame.resid, -c('se','z'))
+brain.ind.frame.resid.final = brain.ind.frame.resid.final[brain.ind.frame.resid.final$label != '',]
+write.csv(brain.ind.frame.resid.final,"tables/final/mediation.individual.single.brain.residualized.csv")
+```
