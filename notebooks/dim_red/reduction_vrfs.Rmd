@@ -67,14 +67,25 @@ gvrf_cfa = cfa(cardio_cfa_input, vrfs.merged)
 ```
 
 ```{r}
-fitMeasures(gvrf_cfa, c("cfi","tli","rmsea","srmr"))
+gvrf.metrics = fitMeasures(gvrf_cfa, c("cfi","tli","rmsea","srmr"))
+gvrf.metrics.frame = tibble::rownames_to_column(data.frame(gvrf.metrics))
+colnames(gvrf.metrics.frame) = c('rhs','est.std')
 ```
 
 
 
 # Save all SEM Paramters
 ```{r}
-write.csv(standardizedSolution(gvrf_cfa),"tables/dim_red/gvrf_cfa.csv")
+gvrf.table = standardizedSolution(gvrf_cfa)
+write.csv(gvrf.table,"tables/dim_red/gvrf_cfa.csv")
+```
+
+
+```{r}
+gvrf.final = 
+  rbind(dplyr::select(gvrf.table[gvrf.table$op == '=~',],c('rhs','est.std')),
+        gvrf.metrics.frame)
+write.csv(gvrf.final,"tables/final/gvrf.cfa.csv")
 ```
 
 # Path Diagram

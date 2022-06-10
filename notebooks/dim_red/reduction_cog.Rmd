@@ -35,14 +35,26 @@ g_cfa = cfa(g, cog.merged)
 ```
 
 ```{r}
-fitMeasures(g_cfa, c("cfi","tli","rmsea","srmr",'r2'))
+g.metrics = fitMeasures(g_cfa, c("cfi","tli","rmsea","srmr"))
+g.metrics.frame = tibble::rownames_to_column(data.frame(g.metrics))
+colnames(g.metrics.frame) = c('rhs','est.std')
 ```
 
+# Save all SEM Paramters
+```{r}
+g.table = standardizedSolution(g_cfa)
+write.csv(g.table,"tables/dim_red/g_cfa.csv")
+```
 
 
 ```{r}
-write.csv(standardizedSolution(g_cfa),"tables/dim_red/g_cfa.csv")
+g.final = 
+  rbind(dplyr::select(g.table[g.table$op == '=~',],c('rhs','est.std')),
+        g.metrics.frame)
+write.csv(g.final,"tables/final/g.cfa.csv")
 ```
+
+# Path Diagram
 
 ```{r}
 labels = c("vnr", "vismem", "rt","promem","g")

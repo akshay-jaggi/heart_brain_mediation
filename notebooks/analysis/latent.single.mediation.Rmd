@@ -31,7 +31,8 @@ latents.covariates.residualized.scaled = read.csv('data_derived/merged/latents.c
 effects = 
 "de := c
 ie := a*b
-te := c + a*b"
+te := c + a*b
+pm := 100 * (a*b) / (c+a*b)"
 ```
 
 ```{r}
@@ -56,6 +57,12 @@ med.frame$pvalue_adj = med.frame$pvalue
 med.frame$pvalue_adj[med.frame$lhs=='de'] = p.adjust(med.frame$pvalue[med.frame$lhs=='de'],'BH')
 med.frame$pvalue_adj[med.frame$lhs=='ie'] = p.adjust(med.frame$pvalue[med.frame$lhs=='ie'],'BH')
 write.csv(med.frame,"tables/analysis/mediation.latents.single.csv")
+```
+
+```{r}
+med.frame.final = dplyr::select(med.frame, -c('se','z'))
+med.frame.final = med.frame.final[med.frame.final$label != '',]
+write.csv(med.frame.final,"tables/final/mediation.latents.single.csv")
 ```
 
 ```{r}
@@ -105,6 +112,12 @@ med.frame.resid$pvalue_adj = med.frame.resid$pvalue
 med.frame.resid$pvalue_adj[med.frame.resid$lhs=='de'] = p.adjust(med.frame.resid$pvalue[med.frame.resid$lhs=='de'],'BH')
 med.frame.resid$pvalue_adj[med.frame.resid$lhs=='ie'] = p.adjust(med.frame.resid$pvalue[med.frame.resid$lhs=='ie'],'BH')
 write.csv(med.frame.resid,"tables/analysis/mediation.latents.single.residualized.csv")
+```
+
+```{r}
+med.frame.resid.final = dplyr::select(med.frame.resid, -c('se','z'))
+med.frame.resid.final = med.frame.resid.final[med.frame.resid.final$label != '',]
+write.csv(med.frame.resid.final,"tables/final/mediation.latents.single.residualized.csv")
 ```
 
 ```{r}

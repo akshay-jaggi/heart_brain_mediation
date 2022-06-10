@@ -60,13 +60,29 @@ ggsave('figures/dim_red/cca.cors.png')
 
 ```{r}
 heart.scores = data.frame(cor(merged.heart.zscore, heart.ccs))
+colnames(heart.scores) = paste('Mode',seq(10),sep='')
 brain.scores = data.frame(cor(merged.brain.zscore, brain.ccs))
+colnames(brain.scores) = paste('Mode',seq(10),sep='')
 ```
 
 ```{r}
 write.csv(heart.scores,'tables/dim_red/heart.cca.scores.csv')
 write.csv(brain.scores,'tables/dim_red/brain.cca.scores.csv')
 ```
+
+```{r}
+pad = data.frame(matrix(NA, nrow=nrow(heart.scores) - nrow(brain.scores), ncol = 10))
+colnames(pad) = paste('Mode',seq(10),sep='')
+brain.scores.pad = rbind(brain.scores,pad)
+
+heart.brain.scores = cbind(tibble::rownames_to_column(heart.scores)[,1:4],
+                           tibble::rownames_to_column(brain.scores.pad)[,1:4])
+```
+
+```{r}
+write.csv(heart.brain.scores, 'tables/final/heart.brain.cca.scores.csv')
+```
+
 
 ```{r}
 brain.ccs$f.eid = merged.data.complete.new$f.eid

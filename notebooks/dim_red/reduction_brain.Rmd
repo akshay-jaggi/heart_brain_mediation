@@ -51,11 +51,23 @@ gMD_cfa = cfa(gMD_cfa_input, merged.brain.md)
 ```
 
 ```{r}
-fitMeasures(gMD_cfa, c("cfi","tli","rmsea","srmr"))
+gMD.metrics = fitMeasures(gMD_cfa, c("cfi","tli","rmsea","srmr"))
+gMD.metrics = c(gMD.metrics, 'evr'=evr(merged.brain.md, predict(gMD_cfa)))
+gMD.metrics.frame = tibble::rownames_to_column(data.frame(gMD.metrics))
+colnames(gMD.metrics.frame) = c('rhs','est.std')
+```
+
+# Save all SEM Paramters
+```{r}
+gMD.table = standardizedSolution(gMD_cfa)
+write.csv(gMD.table,"tables/dim_red/gMD_cfa.csv")
 ```
 
 ```{r}
-write.csv(standardizedSolution(gMD_cfa),"tables/dim_red/gmd_cfa.csv")
+gMD.final = 
+  rbind(dplyr::select(gMD.table[gMD.table$op == '=~',],c('rhs','est.std')),
+        gMD.metrics.frame)
+write.csv(gMD.final,"tables/final/gMD.cfa.csv")
 ```
 
 ```{r}
@@ -63,10 +75,6 @@ brain.md.cor = cor(merged.brain.md[,order(colnames(merged.brain.md))])
 colnames(brain.md.cor) = as.character(tract.names$name)
 heatmap.with.labels(brain.md.cor, min=-1,max=1,'correlation')
 ggsave('figures/dim_red/md.cor.png')
-```
-
-```{r}
-evr(merged.brain.md, predict(gMD_cfa))
 ```
 
 ## gFA 
@@ -95,11 +103,23 @@ gfa_cfa = cfa(gfa_cfa_input, merged.brain.fa)
 ```
 
 ```{r}
-fitMeasures(gfa_cfa, c("cfi","tli","rmsea","srmr"))
+gFA.metrics = fitMeasures(gfa_cfa, c("cfi","tli","rmsea","srmr"))
+gFA.metrics = c(gFA.metrics, 'evr'=evr(merged.brain.fa, predict(gfa_cfa)))
+gFA.metrics.frame = tibble::rownames_to_column(data.frame(gFA.metrics))
+colnames(gFA.metrics.frame) = c('rhs','est.std')
+```
+
+# Save all SEM Paramters
+```{r}
+gFA.table = standardizedSolution(gfa_cfa)
+write.csv(gFA.table,"tables/dim_red/gFA_cfa.csv")
 ```
 
 ```{r}
-write.csv(standardizedSolution(gfa_cfa),"tables/dim_red/gfa_cfa.csv")
+gFA.final = 
+  rbind(dplyr::select(gFA.table[gFA.table$op == '=~',],c('rhs','est.std')),
+        gFA.metrics.frame)
+write.csv(gFA.final,"tables/final/gFA.cfa.csv")
 ```
 
 ```{r}
@@ -107,9 +127,6 @@ brain.fa.cor = cor(merged.brain.fa[,order(colnames(merged.brain.fa))])
 colnames(brain.fa.cor) = as.character(tract.names$name)
 heatmap.with.labels(brain.fa.cor, min=-1,max=1,'correlation')
 ggsave('figures/dim_red/fa.cor.png')
-```
-```{r}
-evr(merged.brain.fa, predict(gfa_cfa))
 ```
 
 
@@ -152,7 +169,8 @@ dev.off()
 ```
 
 ```{r}
-write.csv(brain.pca$rotation[,1:3],"tables/dim_red/brain.pca.loadings.csv")
+write.csv(brain.pca$rotation[,1:10],"tables/dim_red/brain.pca.loadings.csv")
+write.csv(brain.pca$rotation[,1:3],"tables/final/brain.pca.loadings.csv")
 ```
 
 ```{r}
