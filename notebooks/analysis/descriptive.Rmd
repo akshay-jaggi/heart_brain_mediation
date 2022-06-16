@@ -212,7 +212,7 @@ big.summary <- list(
 
 ```{r}
 dem.table = qwraps2::summary_table(all.features, big.summary)
-print(dem.table)
+write.csv(dem.table, 'tables/final/demographics.csv')
 ```
 
 
