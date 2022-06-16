@@ -78,6 +78,7 @@ cardio.ttests$mean.in.group.Risk[rownames(cardio.ttests) =='cardio_hyperchol'] =
 ```
 
 
+
 ```{r}
 ps.matched.ttests = rbind(cov.ttests, cardio.ttests, cog.ttests, heart.ttests, brain.ttests)
 write.csv(ps.matched.ttests, "tables/analysis/ps.matched.ttests.csv")
