@@ -44,7 +44,7 @@ clusters = clusters[,!(colnames(clusters) %in% c('cluster', 'Number'))]
 clusters$type = factor(clusters$type, 
                            levels = 
                              c("Size", "Local Uniformity", "Global Variance", 
-                               "Shape", "Local Dimness", "Global Intensity"))
+                               "Shape", "Local Dimness", "Global Intensity","Traditional"))
 ```
 
 # Scale and Residualize Heart Features
