@@ -120,6 +120,7 @@ source('functions/Figure5_grouped_mediation_boxplot.R')
 
 ```{r}
 heart_brain_plot_obj
+ggsave('figures/analysis/mediation.individual.single.png')
 ```
 
 ```{r}
@@ -128,6 +129,7 @@ source('functions/Figure6_DTI_mediation_hemisphere_plot.R')
 
 ```{r}
 x
+ggsave('figures/analysis/mediation.individual.single.dti.png')
 ```
 
 

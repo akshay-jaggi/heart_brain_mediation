@@ -24,7 +24,7 @@ library("paletteer")
 knitr::opts_knit$set(root.dir = normalizePath(".."))
 
 # Load supplementary table 10 from manuscript -----
-plot <- read.csv("tables/final/mediation.latents.single.residualized.csv")
+plot <- read.csv("tables/final/mediation.latent.multiple.residualized.csv")
 mycolors <- paletteer::paletteer_c("grDevices::Blue-Red",16) 
 mycolors <- (values = c( # BRAIN IDP COLOUR ASSIGNMENTS  -----
                          
@@ -77,32 +77,30 @@ plot$mediator <- stringr::str_replace_all(plot$mediator,
                                           c("_" = " ",
                                             "pc" = "PC",
                                             "cc" = "CC" 
-                                            ))
+                                          ))
 
 # Plot only direct & indirect effect -----
-plot <- plot %>% filter(label == "ie" | label == "de")
+plot <- plot %>% filter(grepl('ie',label))
 
 # Rename some label column metrics for clarity
 # (e.g. de -> direct effect and ie -> indirect effect) -----
-plot$label <- stringr::str_replace_all(plot$label,
-                                         c("de" = "direct effect",
-                                           "ie" = "indirect effect"))
+plot$label <- rep('indirect effect', length(plot$label)) 
 
 
 ## new order, group by type of dimensionality reduction method?
 # Manual reorder note that setting x = reorder(mediator,-est.std) works just as well -----
 plot  <- plot  %>%
-  mutate(mediator = fct_relevel(mediator, 
+  mutate(mediator = fct_relevel(mediator,
                                 ## BRAIN LATENTS
-                                "brain latent CC1",
                                 "brain latent gMD",
                                 "brain latent gFA",
-                                "brain latent atrophy",
                                 "brain latent PC2",
+                                "brain latent CC1",
                                 "brain latent PC3",
+                                "brain latent atrophy",
                                 "brain latent CC3",
-                                "brain latent PC1",
                                 "brain latent grey",
+                                "brain latent PC1",
                                 "brain latent CC2",
 
                                 ## BRAIN LATENTS
@@ -110,11 +108,10 @@ plot  <- plot  %>%
                                 "heart latent PC1",
                                 "heart latent PC3",
                                 "heart latent CC3",
-                                "heart latent PC2",
                                 "heart latent CC2",
-                                
-                                
-  ))
+                                "heart latent PC2",
+ #
+))
 
 
 #### GEOM POINT PLOT -----
@@ -144,7 +141,7 @@ x <- ggplot(
     position = position_dodge(0.9),
     width = 0.3,
     colour = "darkgrey",
-  # colour = "#414141",
+    # colour = "#414141",
     alpha = 0.9,
     size = 0.8
   ) +
@@ -155,8 +152,8 @@ x <- ggplot(
   theme_bw() +
   xlab("") +
   ylab("") +
-  #ylim(-0.076,0.05) +
-  facet_wrap( ~ label)
+  ylim(-0.075,0.05) +
+  facet_grid( ~ label)
 
 x <- x +
   theme(legend.position="none",
@@ -169,12 +166,11 @@ x <- x +
           size = 11,
           face = "bold",
           colour = "black"
-        )
+        ),
+        aspect.ratio = 5/4,
   ) +
   scale_shape_manual(values = c(1,
                                 16)) +
   scale_colour_manual(values = mycolors)
 
 ###### 
-
-

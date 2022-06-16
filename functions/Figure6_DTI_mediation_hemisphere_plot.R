@@ -138,7 +138,7 @@ plot$type <- stringr::str_replace_all(plot$type,
 plot$mediator <- as.factor(plot$mediator)
 
 # Set Colors
-mycolors <- rev(paletteer::paletteer_c("grDevices::Blues",15)[1:11])
+mycolors <- paletteer::paletteer_c("grDevices::Blues",15)[1:11]
 
 
 #### GEOM POINT PLOT -----

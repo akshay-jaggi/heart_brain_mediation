@@ -72,5 +72,6 @@ source('functions/Figure3_revision.R')
 
 ```{r}
 x
+ggsave('figures/analysis/mediation.latent.single.png')
 ```
 
