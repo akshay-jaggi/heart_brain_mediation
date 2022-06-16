@@ -95,13 +95,13 @@ plot  <- plot  %>%
   mutate(mediator = fct_relevel(mediator, 
                                 ## BRAIN LATENTS
                                 "brain latent CC1",
-                                "brain latent gMD",
-                                "brain latent gFA",
-                                "brain latent atrophy",
                                 "brain latent PC2",
-                                "brain latent PC3",
                                 "brain latent CC3",
+                                "brain latent gFA",
+                                "brain latent gMD",
                                 "brain latent PC1",
+                                "brain latent PC3",
+                                "brain latent atrophy",
                                 "brain latent grey",
                                 "brain latent CC2",
 

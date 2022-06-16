@@ -183,12 +183,13 @@ x = x +
       face = "bold",
       colour = "black"
     ),
-    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.text.x = element_text(size = 9),
     axis.title.y = element_text(
       size = 11,
       face = "bold",
       colour = "black"
-    )
+    ),
+    axis.text.y = element_text(size = 9),
   ) +
   scale_shape_manual(values = c(16,
                                 1)) +
