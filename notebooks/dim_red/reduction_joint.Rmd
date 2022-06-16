@@ -87,8 +87,8 @@ write.csv(heart.brain.scores, 'tables/final/heart.brain.cca.scores.csv')
 ```{r}
 brain.ccs$f.eid = merged.data.complete.new$f.eid
 heart.ccs$f.eid = merged.data.complete.new$f.eid
-brain.ccs = brain.ccs %>% select(f.eid, everything())
-heart.ccs = heart.ccs %>% select(f.eid, everything())
+brain.ccs = brain.ccs %>% dplyr::select(f.eid, everything())
+heart.ccs = heart.ccs %>% dplyr::select(f.eid, everything())
 ```
 
 ```{r}
@@ -125,11 +125,11 @@ bottom.colors <- brewer.pal(10, "Set3")[group.numbers]
 heart.scores = heart.scores[order(rownames(heart.scores)),]
 brain.scores = brain.scores[order(rownames(brain.scores)),]
 
-data = heart.brain.cor[order(heart.scores$X0),order(brain.scores$X0)]
-test.names1 = heart.groups[order(heart.scores$X0)]
-test.names2 = brain.groups[order(brain.scores$X0)]
-test.palette1 = side.colors[order(heart.scores$X0)]
-test.palette2 = bottom.colors[order(brain.scores$X0)]
+data = heart.brain.cor[order(heart.scores$Mode1),order(brain.scores$Mode1)]
+test.names1 = heart.groups[order(heart.scores$Mode1)]
+test.names2 = brain.groups[order(brain.scores$Mode1)]
+test.palette1 = side.colors[order(heart.scores$Mode1)]
+test.palette2 = bottom.colors[order(brain.scores$Mode1)]
 #png(file = 'figures/dim_red/heart.brain.cor.png',width=1200,height=800)
 heatmap.with.twobars(data, test.names1, test.names2, test.palette1, test.palette2)
 #dev.off()
