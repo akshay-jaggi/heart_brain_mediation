@@ -26,7 +26,11 @@ vrf.cog.heart.brain.trad = read.csv('data_derived/merged/vrf.cog.heart.brain.tra
 ```
 
 ```{r}
-merged.heart = vrf.cog.heart.brain.trad[,grep("heart_",colnames(vrf.cog.heart.brain.trad))]
+merged.heart = vrf.cog.heart.brain.trad[,
+                                        grepl("heart_",colnames(vrf.cog.heart.brain.trad)) & 
+                                          !grepl("_cmr_",colnames(vrf.cog.heart.brain.trad))]
+heart.trad = vrf.cog.heart.brain.trad[,
+                                        grepl("cmr",colnames(vrf.cog.heart.brain.trad))]
 ```
 
 # PCA
@@ -34,6 +38,13 @@ merged.heart = vrf.cog.heart.brain.trad[,grep("heart_",colnames(vrf.cog.heart.br
 heart.pca = prcomp(merged.heart, center = TRUE, scale = TRUE)
 heart.variances = summary(heart.pca)$importance
 ```
+
+```{r}
+trad.pca = prcomp(heart.trad, center=TRUE, scale=TRUE)
+summary(trad.pca)
+trad.pca$rotation
+```
+
 
 # Cross Validation
 ```{r}

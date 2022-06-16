@@ -23,6 +23,7 @@ brain.confounders = read.csv('data/brain.confounders.csv')
 heart.disease.status  = read.csv('data/heart.disease.csv')
 brain.disease.status  = read.csv('data/brain.disease.csv')
 bsa = read.csv('data/bsa.csv')
+extra.cardio.data = read.csv("data/extra.cardio.data.csv")
 ```
 
 # Process Heart Conditions
@@ -34,6 +35,12 @@ heart.disease.status.tomerge = heart.disease.status[,c('f.eid','cov_nosevere')]
 # Rename Brain Conditions
 ```{r}
 brain.disease.status = dplyr::rename(brain.disease.status, cov_braindisease = neuro_self_report)
+```
+
+# Prepare Ethnicity
+```{r}
+ethnicity.tomerge = extra.cardio.data[,c('f.eid', 'bio.ethnic_background.0.baseline')]
+colnames(ethnicity.tomerge) = c('f.eid','cov_ethnicity')
 ```
 
 
@@ -48,7 +55,7 @@ brain.covs = brain.confounders[,grepl('f.eid',colnames(brain.confounders)) |
 
 # Merge
 ```{r}
-cov.frames = list(cov.data, brain.covs, heart.disease.status.tomerge, bsa, brain.disease.status)
+cov.frames = list(cov.data, brain.covs, heart.disease.status.tomerge, bsa, brain.disease.status, ethnicity.tomerge)
 merged.covs = 
   cov.frames %>% 
   purrr::reduce(inner_join,by="f.eid")
