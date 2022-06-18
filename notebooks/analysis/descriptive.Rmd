@@ -141,7 +141,7 @@ latents.covariates.residualized[,c('cov_age',
   geom_smooth(method=lm) + ylim(-7,7) + xlab('age') + ylab('normalized residual') + 
   facet_wrap(~ variable)  + 
   theme_classic()
-#ggsave('figures/analysis/age.ccs.png')
+ggsave('figures/analysis/age.ccs.png')
 ```
 ```{r}
 test = latents.covariates.residualized %>% 

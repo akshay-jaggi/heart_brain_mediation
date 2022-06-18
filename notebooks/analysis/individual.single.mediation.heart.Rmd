@@ -40,7 +40,6 @@ clusters = read.csv('data/heart.radiomics.clustering.csv')
 ```
 
 ```{r}
-clusters = clusters[,!(colnames(clusters) %in% c('cluster', 'Number'))]
 clusters$type = factor(clusters$type, 
                            levels = 
                              c("Size", "Local Uniformity", "Global Variance", 

@@ -186,14 +186,14 @@ write.csv(lin.to.save.residualized[
 ```
 
 ```{r}
-lin.to.save.residualized.final = dplyr::select(lin.to.save, -c('op','z','se'))
+lin.to.save.residualized.final = dplyr::select(lin.to.save, -c('z','se'))
 lin.to.save.residualized.final = lin.to.save.residualized.final[(lin.to.save$rhs %in% latent.names) & (lin.to.save$rhs != lin.to.save$lhs),]
 write.csv(lin.to.save.residualized.final,
           "tables/final/linear.model.pairwise.residualized.csv")
 ```
 
 ```{r}
-gvrf.associations.final = lin.to.save.residualized.final[grepl('gvrf',lin.to.save.residualized.final$rhs),]
+gvrf.associations.final = lin.to.save.residualized.final[grepl('gvrf',lin.to.save.residualized.final$lhs),]
 write.csv(gvrf.associations.final,
           "tables/final/gvrf.associations.csv")
 ```
@@ -210,21 +210,23 @@ gvrf.heart.brain = lin.to.save.residualized[grepl('gvrf',lin.to.save.residualize
 test = factor(grepl('heart',gvrf.heart.brain$rhs))
 levels(test) = c('brain','heart')
 gvrf.heart.brain$class = test
-gvrf.heart.brain$sig = (gvrf.heart.brain$pvalue_adj < 0.01) & (!is.na(gvrf.heart.brain$pvalue_adj))
+gvrf.heart.brain$sig = (gvrf.heart.brain$pvalue_adj < 0.05) & (!is.na(gvrf.heart.brain$pvalue_adj))
 ```
 
 ```{r}
-ggplot(gvrf.heart.brain, aes(x = class, y = r)) + 
+ggplot(gvrf.heart.brain, aes(x = class, y = r, fill = class)) + 
   geom_boxplot(outlier.shape = NA) + 
-  geom_point(aes(alpha=sig), position = position_jitter(0.1)) + 
+  geom_point(position = position_jitter(0.1)) + 
   ylab("R-squared") + 
-  scale_alpha_discrete('significant',labels=c('False','True')) + ylim(0,0.5) +
+  #scale_alpha_discrete('significant',labels=c('False','True')) + 
+  ylim(0,0.5) +
   ggtitle('gVRF') + 
   theme_classic()+ 
     theme(
   axis.title.x = element_blank(),
   axis.ticks.x = element_blank(),
-  plot.title = element_text(face='bold',hjust = 0.5))
+  plot.title = element_text(face='bold',hjust = 0.5)) +
+  scale_fill_manual(values = paletteer::paletteer_c("grDevices::Blue-Red",6)[c(2,5)] )
 ggsave('figures/analysis/linear.gvrf.residualized.png')
 ```
 
@@ -234,11 +236,11 @@ g.heart.brain = lin.to.save.residualized[grepl('cog_latent_g',lin.to.save.residu
 test = factor(grepl('heart',g.heart.brain$rhs))
 levels(test) = c('brain','heart')
 g.heart.brain$class = test
-g.heart.brain$sig = (g.heart.brain$pvalue_adj < 0.01) & (!is.na(g.heart.brain$pvalue_adj))
+g.heart.brain$sig = (g.heart.brain$pvalue_adj < 0.05) & (!is.na(g.heart.brain$pvalue_adj))
 ```
 
 ```{r}
-ggplot(g.heart.brain, aes(x = class, y = r)) + 
+ggplot(g.heart.brain, aes(x = class, y = r, fill=class)) + 
   geom_boxplot(outlier.shape = NA) + 
   geom_point(aes(alpha=sig), position = position_jitter(0.1)) + 
   ylab("R-squared") + 
@@ -249,6 +251,7 @@ ggplot(g.heart.brain, aes(x = class, y = r)) +
     theme(
   axis.title.x = element_blank(),
   axis.ticks.x = element_blank(),
-  plot.title = element_text(face='bold',hjust = 0.5))
-#ggsave('figures/analysis/linear.g.residualized.png')
+  plot.title = element_text(face='bold',hjust = 0.5)) + 
+  scale_fill_manual(values = paletteer::paletteer_c("grDevices::Blue-Red",6)[c(2,5)] )
+ggsave('figures/analysis/linear.g.residualized.png')
 ```

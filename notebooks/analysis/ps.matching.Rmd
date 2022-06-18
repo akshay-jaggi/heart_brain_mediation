@@ -77,10 +77,19 @@ cardio.ttests$mean.in.group.Risk[rownames(cardio.ttests) =='cardio_hyperchol'] =
   sum(subjects.matched$cardio_hyperchol)
 ```
 
+```{r}
+cog.ttests$mean.in.group.Control[rownames(cog.ttests) == 'cog_prosmem'] = 
+  sum(subjects.matched$cog_prosmem[subjects.matched$case=='Control'])
+cog.ttests$mean.in.group.Risk[rownames(cog.ttests) == 'cog_prosmem'] = 
+  sum(subjects.matched$cog_prosmem[subjects.matched$case=='Risk'])
+```
+
+
 
 
 ```{r}
 ps.matched.ttests = rbind(cov.ttests, cardio.ttests, cog.ttests, heart.ttests, brain.ttests)
+ps.matched.ttests$significant = ps.matched.ttests$pvalue_adj < 0.05
 write.csv(ps.matched.ttests, "tables/analysis/ps.matched.ttests.csv")
 write.csv(ps.matched.ttests, "tables/final/ps.matched.ttests.csv")
 ```

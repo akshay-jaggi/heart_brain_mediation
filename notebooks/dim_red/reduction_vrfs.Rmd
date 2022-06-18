@@ -99,8 +99,8 @@ semPaths(gvrf_cfa,what="std",fade=FALSE,nodeLabels=labels,edge.label.cex=1,sizeM
 # Heatmap
 ```{r}
 vrfs.cor = cor(vrfs.merged)
-colnames(vrfs.cor) = sapply(colnames(vrfs.cor),function(x) strsplit(x,'_')[[1]][2])
-heatmap.with.labels(vrfs.cor,min=-1,max=1,'correlation')
+rownames(vrfs.cor) = sapply(colnames(vrfs.cor),function(x) strsplit(x,'_')[[1]][2])
+heatmap.with.nolabels(vrfs.cor,min=-1,max=1,'correlation')
 ggsave('figures/dim_red/vrf.cor.png')
 ```
 
