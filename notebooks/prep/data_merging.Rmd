@@ -90,6 +90,11 @@ merged.new.healthy = merged.new[merged.new$cov_nosevere & !merged.new$cov_braind
 ```
 
 ```{r}
+sum(!merged.new$cov_nosevere)
+```
+
+
+```{r}
 write.csv(merged.trad.healthy,
           'data_derived/merged/vrf.cog.heart.brain.trad.healthy.csv', row.names = FALSE)
 write.csv(merged.new.healthy,
