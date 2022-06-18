@@ -1,21 +1,22 @@
-"","all.features (N = 11,947)"
-"Age","54.15 (7.39)"
-"Sex","6,508 (54.47\%)"
-"Ethnicity","11,045 (92.45\%)"
-"Hypertension","1,281 (10.72\%)"
-"Diabetes","300 (2.51\%)"
-"Hypercholesterolemia","2,319 (19.41\%)"
-"Pack Years","4.41 (10.58)"
-"Pulse Pressure","53.05 (12.00)"
-"BMI","26.39 (4.10)"
-"WHR","0.85 (0.09)"
-"Verbal Numerical Reasoning","6.82 (2.06)"
-"Log Reaction Time","6.36 (0.17)"
-"Log Visual Memory","1.32 (0.61)"
-"Prospective Memory","10,525 (88.10\%)"
-"LV Volume (ED)","147,980.22 (32,878.52)"
-"Myocardial Volume (ES)","82,618.15 (21,821.97)"
-"Myocardial Intensity (ES)","62.92 (15.39)"
-"Myocardial Entropy (ES)","1.41 (0.22)"
-"Total brain volume","1,169,837.61 (111,089.14)"
-"Grey matter volume","619,447.52 (55,122.68)"
+,"all.features (N = 11,947)"
+Age,54.15 (7.39)
+Sex,"6,508 (54.47\%)"
+Ethnicity,"11,045 (92.45\%)"
+Hypertension,"1,281 (10.72\%)"
+Diabetes,300 (2.51\%)
+Hypercholesterolemia,"2,319 (19.41\%)"
+Pack Years,4.41 (10.58)
+Pulse Pressure,53.05 (12.00)
+BMI,26.39 (4.10)
+WHR,0.85 (0.09)
+Verbal Numerical Reasoning,6.82 (2.06)
+Log Reaction Time,6.36 (0.17)
+Log Visual Memory,1.32 (0.61)
+Prospective Memory,"10,525 (88.10\%)"
+LV Ejection Fraction,59.47 (5.80)
+LV Volume (ED),"147,980.22 (32,878.52)"
+Myocardial Volume (ES),"82,618.15 (21,821.97)"
+Myocardial Intensity (ES),62.92 (15.39)
+Myocardial Entropy (ES),1.41 (0.22)
+Total brain volume,"1,169,837.61 (111,089.14)"
+Grey matter volume,"619,447.52 (55,122.68)"

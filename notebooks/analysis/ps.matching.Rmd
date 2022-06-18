@@ -86,6 +86,7 @@ cog.ttests$mean.in.group.Risk[rownames(cog.ttests) == 'cog_prosmem'] =
 
 
 
+
 ```{r}
 ps.matched.ttests = rbind(cov.ttests, cardio.ttests, cog.ttests, heart.ttests, brain.ttests)
 ps.matched.ttests$significant = ps.matched.ttests$pvalue_adj < 0.05

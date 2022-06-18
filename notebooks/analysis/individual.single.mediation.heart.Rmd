@@ -43,7 +43,7 @@ clusters = read.csv('data/heart.radiomics.clustering.csv')
 clusters$type = factor(clusters$type, 
                            levels = 
                              c("Size", "Local Uniformity", "Global Variance", 
-                               "Shape", "Local Dimness", "Global Intensity", "Traditional"))
+                               "Shape", "Local Dimness", "Global Intensity","Traditional"))
 ```
 
 # Scale and Residualize Heart Features
@@ -122,3 +122,4 @@ mediation.individual.single.heart.resid.final =
 write.csv(mediation.individual.single.heart.resid.final,
           "tables/final/mediation.individual.single.heart.residualized.csv")
 ```
+
