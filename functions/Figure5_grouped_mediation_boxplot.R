@@ -41,30 +41,30 @@ Heart_Brain_mediation_plot$type <- stringr::str_replace_all(Heart_Brain_mediatio
 
 # NOTE that grDevices::Blue-Red colour palette works well for this figure 
 # Here I have individually assigned hex colours to demonstrate which colour affects which boxplot
-# mycolors <- paletteer::paletteer_c("grDevices::Blue-Red",18) 
+mycolors <- paletteer::paletteer_c("grDevices::Blue-Red",17) 
 
-mycolors <- (values = c( # BRAIN IDP COLOUR ASSIGNMENTS  -----
-                         
-                        "#023FA5FF", # MO
-                        "#455AA7FF", # ICVF
-                        "#3C5488B2", # ISOVF
-                        "#6673B1FF", # l2
-                        "#828BBBFF", # MD
-                        "#9BA1C5FF", # OD
-                        "#8796C2FF", # l1
-                        "#95AFD0FF", # FA
-                        "#A7C6DDFF", # L3
-                        "#7695f0",   # Volume (note consider revising- too blue?)
-                        
-                        # CARDIAC MRI IDP COLOUR ASSIGNMENTS  -----
-                        
-                        "#DED3D5FF", # Global variance
-                        "#C8969FFF", # Local uniformity
-                        "#BD7B88FF", # Shape
-                        "#AF5E70FF", # Size
-                        "#A03C56FF", # Local Dimness
-                        "#8E063BFF"  # Global intensity
-))
+# mycolors <- (values = c( # BRAIN IDP COLOUR ASSIGNMENTS  -----
+#                          
+#                         "#023FA5FF", # MO
+#                         "#455AA7FF", # ICVF
+#                         "#3C5488B2", # ISOVF
+#                         "#6673B1FF", # l2
+#                         "#828BBBFF", # MD
+#                         "#9BA1C5FF", # OD
+#                         "#8796C2FF", # l1
+#                         "#95AFD0FF", # FA
+#                         "#A7C6DDFF", # L3
+#                         "#7695f0",   # Volume (note consider revising- too blue?)
+#                         
+#                         # CARDIAC MRI IDP COLOUR ASSIGNMENTS  -----
+#                         
+#                         "#DED3D5FF", # Global variance
+#                         "#C8969FFF", # Local uniformity
+#                         "#BD7B88FF", # Shape
+#                         "#AF5E70FF", # Size
+#                         "#A03C56FF", # Local Dimness
+#                         "#8E063BFF"  # Global intensity
+# ))
 
 # Manual reorder note that setting x = reorder(mediator,-est.std) works just as well -----
 Heart_Brain_mediation_plot  <- Heart_Brain_mediation_plot  %>%
@@ -83,6 +83,7 @@ Heart_Brain_mediation_plot  <- Heart_Brain_mediation_plot  %>%
                                 "Local Uniformity",
                                 "Shape",
                                 "Size",
+                                "Traditional",
                                 "Local Dimness",
                                 "Global Intensity"))
 

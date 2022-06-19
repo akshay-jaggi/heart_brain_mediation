@@ -24,7 +24,8 @@ merged.data.complete.new = read.csv('data_derived/merged/vrf.cog.heart.brain.new
 ```
 
 ```{r}
-merged.heart = merged.data.complete.new[,grepl("heart_",colnames(merged.data.complete.new))]
+merged.heart = merged.data.complete.new[,grepl("heart_",colnames(merged.data.complete.new)) & 
+                                          !grepl("_cmr_",colnames(merged.data.complete.new))]
 merged.brain = merged.data.complete.new[,grepl("brain_",colnames(merged.data.complete.new))]
 ```
 
@@ -66,8 +67,8 @@ colnames(brain.scores) = paste('Mode',seq(10),sep='')
 ```
 
 ```{r}
-write.csv(heart.scores,'tables/dim_red/heart.cca.scores.csv')
-write.csv(brain.scores,'tables/dim_red/brain.cca.scores.csv')
+write.csv(heart.scores,'tables/dim_red/heart.cca.loadings.csv')
+write.csv(brain.scores,'tables/dim_red/brain.cca.loadings.csv')
 ```
 
 ```{r}

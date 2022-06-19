@@ -199,8 +199,6 @@ big.summary <- list(
     "Prospective Memory" = ~n_perc(cog_prosmem)),
   "CMR Indices" = list(
     "LV Ejection Fraction" = ~mean_sd(heart_cmr_LVEF, denote_sd = "paren"),
-    "LV Volume (ED)" = ~mean_sd(heart_shape_Volume_LV_ED, denote_sd = "paren"),
-    "Myocardial Volume (ES)" = ~mean_sd(heart_shape_Volume_MYO_ES, denote_sd = "paren"),
     "Myocardial Intensity (ES)" = ~mean_sd(heart_intensity_Mean_MYO_ES, denote_sd = "paren"),
     "Myocardial Entropy (ES)" = ~mean_sd(heart_intensity_Entropy_MYO_ES, denote_sd = "paren")),
   "Brain MRI" = list(
