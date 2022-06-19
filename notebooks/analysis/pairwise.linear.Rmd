@@ -113,7 +113,7 @@ latent.names = colnames(latents.covariates.scaled)[grepl('latent',colnames(laten
 lin.model.pairwise.residualized = list()
 for(my.var in latent.names) {
   lin.model.pairwise.residualized[[my.var]] = list()
-  baseline = paste(c(my.var," ~ cov_age + cov_sex\n"),collapse = "")
+  baseline = paste(c(my.var," ~ cov_age + cov_sex + cov_age*cov_sex\n"),collapse = "")
   baseline.sem = sem(baseline,latents.covariates.residualized.scaled)
   baseline.r = lavInspect(baseline.sem,'rsquare')
   for(my.other.var in latent.names) {
@@ -124,11 +124,11 @@ for(my.var in latent.names) {
       lin.model.pairwise.residualized[[my.var]][[my.other.var]] = dummy
       next
     }
-    lin.model = paste(c(my.var," ~ ", my.other.var, "+ cov_age + cov_sex\n"),collapse = "")
+    lin.model = paste(c(my.var," ~ ", my.other.var, "+ cov_age + cov_sex + cov_age:cov_sex\n"),collapse = "")
     lin.model.sem = sem(lin.model,latents.covariates.residualized.scaled)
     out = standardizedsolution(lin.model.sem)
-    out$model.r = c(lavInspect(lin.model.sem,'rsquare'),rep(NA,9))
-    out$additional.r = c(lavInspect(lin.model.sem,'rsquare') - baseline.r,rep(NA,9))
+    out$model.r = c(lavInspect(lin.model.sem,'rsquare'),rep(NA,14))
+    out$additional.r = c(lavInspect(lin.model.sem,'rsquare') - baseline.r,rep(NA,14))
     lin.model.pairwise.residualized[[my.var]][[my.other.var]] = out[out$op=="~"|out$op==":=",]
   }
 }

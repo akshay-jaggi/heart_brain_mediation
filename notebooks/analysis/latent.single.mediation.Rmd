@@ -29,8 +29,8 @@ all.features = read.csv('data_derived/merged/vrf.cog.heart.brain.trad.healthy.cs
 ```
 
 ```{r}
-latents.covariates.scaled$cov_LVV = all.features$heart_cmr_LVESV
-latents.covariates.residualized.scaled$cov_LVV = all.features$heart_cmr_LVESV
+latents.covariates.scaled$cov_LVV = all.features$cardio_bmi
+latents.covariates.residualized.scaled$cov_LVV = all.features$cardio_bmi
 ```
 
 
