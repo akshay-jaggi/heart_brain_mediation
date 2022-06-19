@@ -46,7 +46,7 @@ lin.model.pairwise = list()
 for(my.var in latent.names) {
   lin.model.pairwise[[my.var]] = list()
   baseline = paste(c(my.var," ~ cov_age + cov_sex\n"),collapse = "")
-  baseline.sem = sem(baseline,latents.covariates.residualized.scaled)
+  baseline.sem = sem(baseline,latents.covariates.scaled)
   baseline.r = lavInspect(baseline.sem,'rsquare')
   for(my.other.var in latent.names) {
     # Fill with blanks if matched with self
@@ -171,8 +171,9 @@ write.csv(lin.to.save.residualized[
 ```
 
 ```{r}
-lin.to.save.residualized.final = dplyr::select(lin.to.save, -c('z','se'))
-lin.to.save.residualized.final = lin.to.save.residualized.final[(lin.to.save$rhs %in% latent.names) & (lin.to.save$rhs != lin.to.save$lhs),]
+lin.to.save.residualized.final = dplyr::select(lin.to.save.residualized, -c('z','se'))
+lin.to.save.residualized.final = lin.to.save.residualized.final[
+  (lin.to.save.residualized$rhs %in% latent.names) & (lin.to.save.residualized$rhs != lin.to.save.residualized$lhs),]
 write.csv(lin.to.save.residualized.final,
           "tables/final/linear.model.pairwise.residualized.csv")
 ```

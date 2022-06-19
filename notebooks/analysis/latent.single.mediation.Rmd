@@ -25,7 +25,14 @@ source('functions/mediation.R')
 latents.covariates.scaled = 
   read.csv('data_derived/merged/latents.covariates.scaled.csv')
 latents.covariates.residualized.scaled = read.csv('data_derived/merged/latents.covariates.residualized.scaled.csv')
+all.features = read.csv('data_derived/merged/vrf.cog.heart.brain.trad.healthy.csv')
 ```
+
+```{r}
+latents.covariates.scaled$cov_LVV = all.features$heart_cmr_LVESV
+latents.covariates.residualized.scaled$cov_LVV = all.features$heart_cmr_LVESV
+```
+
 
 # Simple Mediation Model for each Mediator 
 ```{r}
@@ -33,7 +40,7 @@ independent.variable = 'cardio_latent_gvrf'
 dependent.variable   = 'cog_latent_g'
 mediators = colnames(latents.covariates.scaled)[grepl('latent',colnames(latents.covariates.scaled)) &
                                                 grepl('heart|brain',colnames(latents.covariates.scaled))]
-covariates = c('cov_age', 'cov_sex')
+covariates = c('cov_age', 'cov_sex','cov_LVV')
 ```
 
 ```{r}
@@ -53,7 +60,7 @@ write.csv(mediation.latent.single.final,
 # Simple Mediation Model for each Mediator Residualized
 
 ```{r}
-mediation.latent.single.resid = run.single.mediation(latents.covariates.scaled, 
+mediation.latent.single.resid = run.single.mediation(latents.covariates.residualized.scaled, 
                                               independent.variable,
                                               dependent.variable, 
                                               mediators, covariates)
@@ -73,5 +80,9 @@ source('functions/Figure3_revision.R')
 ```{r}
 x
 ggsave('figures/analysis/mediation.latent.single.png')
+```
+```{r}
+cor(latents.covariates.residualized.scaled[,grep('cc2|bsa',colnames(latents.covariates.scaled))],
+    all.features[,grep('cmr|bsa',colnames(all.features))])
 ```
 

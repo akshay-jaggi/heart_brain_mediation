@@ -24,7 +24,7 @@ library("paletteer")
 knitr::opts_knit$set(root.dir = normalizePath(".."))
 
 # Load supplementary table 10 from manuscript -----
-plot <- read.csv("tables/final/mediation.latents.single.residualized.csv")
+plot <- read.csv("tables/final/mediation.latent.single.residualized.csv")
 mycolors <- paletteer::paletteer_c("grDevices::Blue-Red",16) 
 mycolors <- (values = c( # BRAIN IDP COLOUR ASSIGNMENTS  -----
                          
