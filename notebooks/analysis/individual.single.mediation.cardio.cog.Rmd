@@ -1,0 +1,144 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+# Set Up
+```{r setup}
+knitr::opts_knit$set(root.dir = normalizePath("../.."))
+```
+
+# Imports
+```{r}
+library(finalfit)
+library(mice)
+library(purrr)
+library(dplyr)
+library(lavaan)
+library(ggplot2)
+library(gplots)
+source('functions/mediation.R')
+```
+
+# Load Data
+```{r}
+latents.covariates.scaled = 
+  read.csv('data_derived/merged/latents.covariates.scaled.csv')
+latents.covariates.residualized.scaled = read.csv('data_derived/merged/latents.covariates.residualized.scaled.csv')
+all.features = 
+  read.csv('data_derived/merged/vrf.cog.heart.brain.trad.healthy.csv')
+```
+
+# Scale Cardio and Cog Features
+```{r}
+cardio.cog = all.features[,grepl('cardio_|cog_',colnames(all.features)) & 
+                            !grepl('prosmem',colnames(all.features))]
+is.nonbinary = sapply(cardio.cog, function(x) !all(x %in% 0:1))
+cardio.cog.scaled = cardio.cog
+cardio.cog.scaled[,is.nonbinary] = scale(cardio.cog.scaled[,is.nonbinary])
+```
+
+```{r}
+latents.covariates.cardio.cog = cbind(latents.covariates.scaled, cardio.cog.scaled)
+latents.covariates.cardio.cog.resid = cbind(latents.covariates.residualized.scaled, cardio.cog.scaled)
+```
+
+# Individual Feature Mediation 
+
+```{r}
+cardio.features = colnames(cardio.cog)[grepl('cardio_',colnames(cardio.cog))]
+cog.features = colnames(cardio.cog)[grepl('cog_',colnames(cardio.cog))]
+mediators = colnames(latents.covariates.scaled)[grepl('latent',colnames(latents.covariates.scaled)) &
+                                                grepl('heart|brain',colnames(latents.covariates.scaled))]
+covariates = c('cov_age', 'cov_sex')
+```
+
+```{r}
+mediation.individual.single.pairs = list()
+iter = 1
+for (cardio.feature in cardio.features) {
+  mediation.individual.single.pairs[[cardio.feature]] = list()
+  for (cog.feature in cog.features) {
+    covariate.string = paste(c(covariates,cardio.features[cardio.features != cardio.feature]),collapse=" + ")
+    lin.model = paste(c(cog.feature," ~ ", cardio.feature, " + ", covariate.string, "\n"), collapse = "")
+    lin.model.sem = sem(lin.model,latents.covariates.cardio.cog)
+    out = standardizedsolution(lin.model.sem)
+    if(out$pvalue[1] < 0.05) {
+          mediation.individual.single.pair = run.single.mediation(latents.covariates.cardio.cog,
+                                              cardio.feature,
+                                              cog.feature,
+                                              mediators, covariates)
+          mediation.individual.single.pair.final = process.mediation.results(mediation.individual.single.pair)
+          mediation.individual.single.pair.final$independent = rep(cardio.feature, nrow(mediation.individual.single.pair.final))
+          mediation.individual.single.pair.final$dependent = rep(cog.feature, nrow(mediation.individual.single.pair.final))
+          mediation.individual.single.pairs[[iter]] = mediation.individual.single.pair.final
+          iter = iter + 1
+    }
+  }
+}
+mediation.pairs.final = dplyr::bind_rows(mediation.individual.single.pairs)
+```
+
+
+
+```{r}
+write.csv(mediation.pairs.final,
+          "tables/final/mediation.individual.pairs.csv")
+```
+
+# Individual Heart Feature Mediation Residualized
+
+```{r}
+mediation.individual.single.pairs.resid = list()
+iter = 1
+for (cardio.feature in cardio.features) {
+  mediation.individual.single.pairs[[cardio.feature]] = list()
+  covariates.new = c(covariates,cardio.features[cardio.features != cardio.feature])
+  covariate.string = paste(covariates.new,collapse=" + ")
+  for (cog.feature in cog.features) {
+    lin.model = paste(c(cog.feature," ~ ", cardio.feature, " + ", covariate.string, "\n"), collapse = "")
+    lin.model.sem = sem(lin.model,latents.covariates.cardio.cog.resid)
+    out = standardizedsolution(lin.model.sem)
+    print(out[1,])
+    if(out$pvalue[1] < 0.05) {
+          mediation.individual.single.pair = run.single.mediation(latents.covariates.cardio.cog.resid,
+                                              cardio.feature,
+                                              cog.feature,
+                                              mediators, covariates.new)
+          mediation.individual.single.pair.final = process.mediation.results(mediation.individual.single.pair)
+          mediation.individual.single.pair.final$independent = rep(cardio.feature, nrow(mediation.individual.single.pair.final))
+          mediation.individual.single.pair.final$dependent = rep(cog.feature, nrow(mediation.individual.single.pair.final))
+          mediation.individual.single.pairs.resid[[iter]] = mediation.individual.single.pair.final
+          iter = iter + 1
+    }
+  }
+}
+mediation.pairs.resid.final = dplyr::bind_rows(mediation.individual.single.pairs.resid)
+```
+
+
+```{r}
+write.csv(mediation.pairs.resid.final,
+          "tables/final/mediation.individual.pairs.residualized.csv")
+```
+
+```{r}
+source('functions/Figure7_packyears.R')
+x
+ggsave('figures/analysis/mediation.packyears.vnr.png')
+```
+
+```{r}
+source('functions/Figure7_whr_vnr.R')
+x
+ggsave('figures/analysis/mediation.whr.vnr.png')
+```
+
+```{r}
+source('functions/Figure7_whr_rt.R')
+x
+ggsave('figures/analysis/mediation.whr.rt.png')
+```
+
+
+
