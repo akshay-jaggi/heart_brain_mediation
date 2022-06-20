@@ -25,12 +25,6 @@ source('functions/mediation.R')
 latents.covariates.scaled = 
   read.csv('data_derived/merged/latents.covariates.scaled.csv')
 latents.covariates.residualized.scaled = read.csv('data_derived/merged/latents.covariates.residualized.scaled.csv')
-all.features = read.csv('data_derived/merged/vrf.cog.heart.brain.trad.healthy.csv')
-```
-
-```{r}
-latents.covariates.scaled$cov_LVV = all.features$cardio_bmi
-latents.covariates.residualized.scaled$cov_LVV = all.features$cardio_bmi
 ```
 
 # Multiple Mediation Model 
@@ -40,7 +34,7 @@ independent.variable = 'cardio_latent_gvrf'
 dependent.variable   = 'cog_latent_g'
 mediators = colnames(latents.covariates.scaled)[grepl('latent',colnames(latents.covariates.scaled)) &
                                                 grepl('heart|brain',colnames(latents.covariates.scaled))]
-covariates = c('cov_age', 'cov_sex','cov_LVV')
+covariates = c('cov_age', 'cov_sex')
 ```
 
 
