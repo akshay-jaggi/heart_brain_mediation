@@ -80,3 +80,30 @@ run.multiple.mediation = function(dataframe, independent, dependent, mediators, 
   mm.out = standardizedsolution(multiple.mediation.sem)
   return(mm.out)
 }
+
+mediation.ind.dep.pairs = function(dataframe, independents, dependents, mediators, covariates) {
+  mediation.individual.single.pairs = list()
+  iter = 1
+  for (independent in independents) {
+    mediation.individual.single.pairs[[independent]] = list()
+    covariate.string = paste(covariates,collapse=" + ")
+    for (dependent in dependents) {
+      lin.model = paste(c(dependent," ~ ", independent, " + ", covariate.string, "\n"), collapse = "")
+      lin.model.sem = sem(lin.model,dataframe)
+      out = standardizedsolution(lin.model.sem)
+      if(out$pvalue[1] < 0.05) {
+        mediation.individual.single.pair = run.single.mediation(dataframe,
+                                                                independent,
+                                                                dependent,
+                                                                mediators, covariates)
+        mediation.individual.single.pair.final = process.mediation.results(mediation.individual.single.pair)
+        mediation.individual.single.pair.final$independent = rep(independent, nrow(mediation.individual.single.pair.final))
+        mediation.individual.single.pair.final$dependent = rep(dependent, nrow(mediation.individual.single.pair.final))
+        mediation.individual.single.pairs[[iter]] = mediation.individual.single.pair.final
+        iter = iter + 1
+      }
+    }
+  }
+  mediation.pairs.final = dplyr::bind_rows(mediation.individual.single.pairs)
+  return(mediation.pairs.final)
+}
