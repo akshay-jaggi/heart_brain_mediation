@@ -84,11 +84,12 @@ for (ind.dep in unique(paste(mediation.individual.pairs.resid$independent, media
   ind.dep = strsplit(ind.dep,' ')[[1]]
   independent = ind.dep[1]
   dependent = ind.dep[2]
-  sorting = sort.by.ies(mediation.individual.pairs.resid[mediation.individual.pairs.resid$independent==independent &
-                                                           mediation.individual.pairs.resid$dependent==dependent,])
-  plot.obj = direct.indirect.plot(mediation.individual.pairs.resid, 
-                                       independent, dependent, sorting, ylims=c(-0.1,0.1))
+  to.plot = mediation.individual.pairs.resid[mediation.individual.pairs.resid$independent==independent &
+                                                           mediation.individual.pairs.resid$dependent==dependent,]
+  sorting = sort.by.ies(to.plot)
+  plot.obj = direct.indirect.plot(to.plot,sorting, ylims=c(-0.1,0.1))
   print(plot.obj)
+  ggsave(paste(c('figures/analysis/mediation.latent',independent,dependent,'png'),collapse='.'))
 }
 ```
 

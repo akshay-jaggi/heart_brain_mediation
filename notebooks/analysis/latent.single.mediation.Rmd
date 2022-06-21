@@ -18,6 +18,7 @@ library(lavaan)
 library(ggplot2)
 library(gplots)
 source('functions/mediation.R')
+source('functions/Figure7.R')
 ```
 
 # Load Data
@@ -67,12 +68,11 @@ write.csv(mediation.latent.single.resid.final,
 ```
 
 # Eleanors Plots
-```{r}
-source('functions/Figure3_revision.R')
-```
 
 ```{r}
-x
+sorting = sort.by.ies(mediation.latent.single.resid.final)
+plot.obj = direct.indirect.plot(mediation.latent.single.resid.final,sorting, ylims=c(-0.1,0.1))
+print(plot.obj)
 ggsave('figures/analysis/mediation.latent.single.png')
 ```
 

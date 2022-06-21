@@ -82,6 +82,12 @@ for(my.var in latent.names) {
 
 
 ```{r}
+better.names = stringr::str_replace_all(colnames(coef.grid),
+                                               c("_" = " ",
+                                                 "pc" = "PC",
+                                                 "cc" = "CC"))
+colnames(coef.grid) = better.names
+rownames(coef.grid) = better.names
 heatmap.with.labels(coef.grid, -1,1,'coefficient')
 ggsave('figures/analysis/linear.pairwise.png')
 ```
@@ -156,6 +162,8 @@ for(my.var in latent.names) {
 ```
 
 ```{r}
+colnames(coef.grid.resid) = better.names
+rownames(coef.grid.resid) = better.names
 heatmap.with.labels(coef.grid.resid, -1,1,'coefficient')
 ggsave('figures/analysis/linear.pairwise.residualized.png')
 ```

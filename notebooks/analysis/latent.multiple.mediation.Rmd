@@ -18,6 +18,7 @@ library(lavaan)
 library(ggplot2)
 library(gplots)
 source('functions/mediation.R')
+source('functions/Figure7.R')
 ```
 
 # Load Data
@@ -76,6 +77,8 @@ source('functions/Figure4_revision.R')
 ```
 
 ```{r}
-x
+sorting = sort.by.ies(mediation.latent.multiple.resid.final)
+plot.obj = indirect.plot(mediation.latent.multiple.resid.final,sorting, ylims=c(-0.1,0.1))
+print(plot.obj)
 ggsave('figures/analysis/mediation.latent.multiple.png')
 ```

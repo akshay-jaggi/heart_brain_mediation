@@ -67,7 +67,10 @@ latents.covariates.residualized = latents.covariates
 to.residualize = colnames(latents.covariates)[grepl('latent',colnames(latents.covariates)) &
                                                 grepl('heart|brain',colnames(latents.covariates))]
 for(latent in to.residualize) {
-  if(grepl('heart',latent)) {
+  if (grepl('cc', latent)) {
+    lin.model = paste(c(latent," ~ cov_bsa + -cov_headsize + cov_pos_x + cov_pos_y + cov_pos_z"),collapse='')
+  }
+  else if (grepl('heart',latent)) {
     lin.model = paste(c(latent," ~ cov_bsa"),collapse='')
   } else {
     lin.model = paste(c(latent," ~  -cov_headsize + cov_pos_x + cov_pos_y + cov_pos_z"),collapse='')
