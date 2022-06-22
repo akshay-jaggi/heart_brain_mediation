@@ -26,10 +26,7 @@ process.mediation.results = function(results.frame) {
   results.frame.final = dplyr::select(results.frame, -c('se','z'))
   results.frame.final = results.frame.final[results.frame.final$label != '',]
   results.frame.final$pvalue_adj = results.frame.final$pvalue 
-  for(test in unique(results.frame.final$label)) {
-    results.frame.final$pvalue_adj[results.frame.final$label == test] =
-      p.adjust(results.frame.final$pvalue[results.frame.final$label == test],'BH')
-  }
+  results.frame.final$pvalue_adj = p.adjust(results.frame.final$pvalue_adj, 'BH')
   results.frame.final$significant = 
     (results.frame.final$pvalue_adj < 0.05) & (!is.na(results.frame.final$pvalue_adj))
   return(results.frame.final)
@@ -85,8 +82,9 @@ mediation.ind.dep.pairs = function(dataframe, independents, dependents, mediator
   mediation.individual.single.pairs = list()
   iter = 1
   for (independent in independents) {
+    covariates.drop = c(covariates,independents[independents!=independent])
     mediation.individual.single.pairs[[independent]] = list()
-    covariate.string = paste(covariates,collapse=" + ")
+    covariate.string = paste(covariates.drop,collapse=" + ")
     for (dependent in dependents) {
       lin.model = paste(c(dependent," ~ ", independent, " + ", covariate.string, "\n"), collapse = "")
       lin.model.sem = sem(lin.model,dataframe)
@@ -95,7 +93,7 @@ mediation.ind.dep.pairs = function(dataframe, independents, dependents, mediator
         mediation.individual.single.pair = run.single.mediation(dataframe,
                                                                 independent,
                                                                 dependent,
-                                                                mediators, covariates)
+                                                                mediators, covariates.drop)
         mediation.individual.single.pair.final = process.mediation.results(mediation.individual.single.pair)
         mediation.individual.single.pair.final$independent = rep(independent, nrow(mediation.individual.single.pair.final))
         mediation.individual.single.pair.final$dependent = rep(dependent, nrow(mediation.individual.single.pair.final))

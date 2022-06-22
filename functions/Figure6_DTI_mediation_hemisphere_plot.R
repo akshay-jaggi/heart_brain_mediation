@@ -13,6 +13,12 @@
 library("tidyverse")
 library("ggplot2")
 
+sort.by.ies = function(dataframe) {
+  ies = dataframe[grepl('ie', dataframe$label) & grepl('MD', dataframe$type)  & grepl('Left', dataframe$hemisphere),]
+  sorting = ies[order(ies$est.std, decreasing=TRUE),]$mediator
+  return(sorting)
+}
+
 # Load supplementary table 11 from manuscript -----
 brain_IDP_plot <- read.csv("tables/final/mediation.individual.single.brain.residualized.csv")
 
@@ -135,7 +141,11 @@ plot$type <- stringr::str_replace_all(plot$type,
                                  c("fa" = "FA",
                                    "md" = "MD"))
 ###
-plot$mediator <- as.factor(plot$mediator)
+plot$mediator = as.factor(plot$mediator)
+sorting = sort.by.ies(plot)
+plot  <- plot  %>%
+  mutate(mediator = fct_relevel(mediator, as.character(sorting)))
+
 
 # Set Colors
 mycolors <- paletteer::paletteer_c("grDevices::Blues",15)[1:11]
@@ -146,9 +156,9 @@ mycolors <- paletteer::paletteer_c("grDevices::Blues",15)[1:11]
 x <- ggplot(
   plot,
   aes(
-    x = reorder(mediator,-est.std),
+    x = mediator,
     y = est.std,
-    colour = reorder(mediator,-est.std),
+    colour = mediator,
     group = hemisphere,
     shape = hemisphere
   )

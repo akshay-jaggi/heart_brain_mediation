@@ -18,7 +18,7 @@ library(lavaan)
 library(ggplot2)
 library(gplots)
 source('functions/mediation.R')
-source('functions/Figure7.R')
+source('functions/med.plots.R')
 ```
 
 # Load Data
@@ -26,6 +26,10 @@ source('functions/Figure7.R')
 latents.covariates.scaled = 
   read.csv('data_derived/merged/latents.covariates.scaled.csv')
 latents.covariates.residualized.scaled = read.csv('data_derived/merged/latents.covariates.residualized.scaled.csv')
+#all.features = 
+#  read.csv('data_derived/merged/vrf.cog.heart.brain.trad.healthy.csv')
+#latents.covariates.scaled$cov_bmi = scale(all.features$cardio_bmi)
+#latents.covariates.residualized.scaled$cov_bmi = scale(all.features$cardio_bmi)
 ```
 
 
@@ -35,6 +39,7 @@ independent.variable = 'cardio_latent_gvrf'
 dependent.variable   = 'cog_latent_g'
 mediators = colnames(latents.covariates.scaled)[grepl('latent',colnames(latents.covariates.scaled)) &
                                                 grepl('heart|brain',colnames(latents.covariates.scaled))]
+#covariates = c('cov_age', 'cov_sex','cov_bmi')
 covariates = c('cov_age', 'cov_sex')
 ```
 
@@ -71,7 +76,7 @@ write.csv(mediation.latent.single.resid.final,
 
 ```{r}
 sorting = sort.by.ies(mediation.latent.single.resid.final)
-plot.obj = direct.indirect.plot(mediation.latent.single.resid.final,sorting, ylims=c(-0.1,0.1))
+plot.obj = direct.indirect.plot(mediation.latent.single.resid.final,sorting, ylims=c(-0.075,0.06))
 print(plot.obj)
 ggsave('figures/analysis/mediation.latent.single.png')
 ```

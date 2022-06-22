@@ -258,7 +258,8 @@ indirect.plot = function(plot, sorting, ylims=c(-0.1,0.05)) {
             size = 11,
             face = "bold",
             colour = "black"
-          )
+          ),
+          aspect.ratio = 5/4
     ) +
     scale_shape_manual(values = c(1,
                                   16)) +

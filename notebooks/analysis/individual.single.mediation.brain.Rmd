@@ -132,4 +132,28 @@ x
 ggsave('figures/analysis/mediation.individual.single.dti.png')
 ```
 
+# Downstream Mediation
+```{r}
+independent.variable = 'heart_latent_pc2'
+dependent.variable   = 'cog_latent_g'
+mediators = colnames(brain)
+covariates = c('cov_age', 'cov_sex')
+```
 
+```{r}
+mediation.individual.single.intensity.brain = run.single.mediation(latents.covariates.brain.residualized, 
+                                              independent.variable,
+                                              dependent.variable, 
+                                              mediators, covariates)
+mediation.individual.single.intensity.brain.final = process.mediation.results(mediation.individual.single.intensity.brain)
+```
+
+```{r}
+mediation.individual.single.intensity.brain.final$type = 
+  sapply(mediation.individual.single.intensity.brain.final$mediator, get.brain.feature.type)
+```
+
+```{r}
+write.csv(mediation.individual.single.intensity.brain.final,
+          "tables/final/mediation.individual.single.intensity.brain.csv")
+```
