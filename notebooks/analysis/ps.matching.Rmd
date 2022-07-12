@@ -48,7 +48,7 @@ all.features =
 #features.with.agg = merge(all.features, dplyr::select(latents,c('f.eid','cardio_latent_agg')), by='f.eid')
 features.with.agg = merge(all.features, latents, by='f.eid')
 #features.with.agg$hba = abs(features.with.agg$heart_latent_cc2) > 2e-5
-features.with.agg$heart_zscore = scale(features.with.agg$heart_cmr_LVSV)
+#features.with.agg$heart_zscore = scale(features.with.agg$heart_cmr_LVSV)
 subjects.to.match = features.with.agg[features.with.agg$cardio_latent_agg == 0 | 
                                         features.with.agg$cardio_latent_agg >= 4,]
 #subjects.to.match = features.with.agg[features.with.agg$hba,]
@@ -100,8 +100,8 @@ cog.ttests$mean.in.group.Risk[rownames(cog.ttests) == 'cog_prosmem'] =
 ps.matched.ttests = rbind(cov.ttests, cardio.ttests, cog.ttests, heart.ttests, brain.ttests) 
 ps.matched.ttests$pvalue_adj =  p.adjust(ps.matched.ttests$p.value,'BH')
 ps.matched.ttests$significant = ps.matched.ttests$pvalue_adj < 0.05
-#write.csv(ps.matched.ttests, "tables/analysis/ps.matched.ttests.csv")
-#write.csv(ps.matched.ttests, "tables/final/ps.matched.ttests.csv")
+write.csv(ps.matched.ttests, "tables/analysis/ps.matched.ttests.csv")
+write.csv(ps.matched.ttests, "tables/final/ps.matched.ttests.csv")
 ```
 
 
