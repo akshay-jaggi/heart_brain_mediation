@@ -35,6 +35,9 @@ independent.variable = 'cardio_latent_gvrf'
 dependent.variable   = 'cog_latent_g'
 mediators = colnames(latents.covariates.scaled)[grepl('latent',colnames(latents.covariates.scaled)) &
                                                 grepl('heart|brain',colnames(latents.covariates.scaled))]
+#mediators = colnames(latents.covariates.scaled)[grepl('latent',colnames(latents.covariates.scaled)) &
+#                                                grepl('heart|brain',colnames(latents.covariates.scaled)) &
+#                                                !grepl('brain_latent_cc|gMD|gFA|atrophy|grey',colnames(latents.covariates.scaled))]
 covariates = c('cov_age', 'cov_sex')
 ```
 
@@ -55,6 +58,8 @@ write.csv(mediation.latent.multiple.final,
 ```
 
 # Multiple Mediation Residualized
+
+
 
 ```{r}
 mediation.latent.multiple.resid = run.multiple.mediation(latents.covariates.residualized.scaled, 

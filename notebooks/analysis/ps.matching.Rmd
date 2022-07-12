@@ -45,7 +45,8 @@ all.features =
 
 # Propensity Score Matching
 ```{r}
-features.with.agg = merge(all.features, dplyr::select(latents,c('f.eid','cardio_latent_agg')), by='f.eid')
+#features.with.agg = merge(all.features, dplyr::select(latents,c('f.eid','cardio_latent_agg')), by='f.eid')
+features.with.agg = merge(all.features, latents, by='f.eid')
 subjects.to.match = features.with.agg[features.with.agg$cardio_latent_agg == 0 | 
                                         features.with.agg$cardio_latent_agg >= 4,]
 subjects.to.match$case = factor(ifelse(subjects.to.match$cardio_latent_agg == 0,"Control","Risk"))
@@ -93,7 +94,7 @@ cog.ttests$mean.in.group.Risk[rownames(cog.ttests) == 'cog_prosmem'] =
 ```
 
 ```{r}
-ps.matched.ttests = rbind(cov.ttests, cardio.ttests, cog.ttests, heart.ttests, brain.ttests)
+ps.matched.ttests = rbind(cov.ttests, cardio.ttests, cog.ttests, heart.ttests, brain.ttests) 
 ps.matched.ttests$pvalue_adj =  p.adjust(ps.matched.ttests$p.value,'BH')
 ps.matched.ttests$significant = ps.matched.ttests$pvalue_adj < 0.05
 write.csv(ps.matched.ttests, "tables/analysis/ps.matched.ttests.csv")

@@ -81,5 +81,19 @@ print(plot.obj)
 ggsave('figures/analysis/mediation.latent.single.png')
 ```
 
+# Fun Control
+```{r}
+independent.variable = 'cardio_latent_gvrf'
+dependent.variable   = 'cog_latent_g'
+mediators = c('heart_latent_cc2')
+covariates = c('cov_age', 'cov_sex', 'heart_latent_pc2', 'brain_latent_grey','brain_latent_atrophy')
+```
 
+```{r}
+mediation.latent.fun = run.single.mediation(latents.covariates.residualized.scaled, 
+                                              independent.variable,
+                                              dependent.variable, 
+                                              mediators, covariates)
+mediation.latent.fun.final = process.mediation.results(mediation.latent.fun)
+```
 
