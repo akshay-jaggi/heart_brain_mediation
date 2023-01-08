@@ -81,6 +81,8 @@ print(plot.obj)
 ggsave('figures/analysis/mediation.latent.single.png')
 ```
 
+
+
 # Fun Control
 ```{r}
 independent.variable = 'cardio_latent_gvrf'

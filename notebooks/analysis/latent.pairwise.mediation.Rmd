@@ -1,0 +1,125 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+# Set Up
+```{r setup}
+knitr::opts_knit$set(root.dir = normalizePath("../.."))
+```
+
+# Imports
+```{r}
+library(finalfit)
+library(mice)
+library(purrr)
+library(dplyr)
+library(lavaan)
+library(ggplot2)
+library(gplots)
+source('functions/mediation.R')
+source('functions/med.plots.R')
+```
+
+# Load Data
+```{r}
+latents.covariates.scaled = 
+  read.csv('data_derived/merged/latents.covariates.scaled.csv')
+latents.covariates.residualized.scaled = read.csv('data_derived/merged/latents.covariates.residualized.scaled.csv')
+```
+
+# Pairwise Mediation Model 
+
+```{r}
+independent.variable = 'cardio_latent_gvrf'
+dependent.variable   = 'cog_latent_g'
+mediators = colnames(latents.covariates.scaled)[grepl('latent',colnames(latents.covariates.scaled)) &
+                                                grepl('heart|brain',colnames(latents.covariates.scaled))]
+covariates = c('cov_age', 'cov_sex')
+```
+
+
+```{r}
+mediation.latent.multiple.parallel = run.multiple.parallel.mediation(latents.covariates.scaled, 
+                                                   independent.variable,
+                                                   dependent.variable,
+                                                   mediators, covariates)
+mediation.latent.multiple.parallel = 
+  mediation.latent.multiple.parallel[grepl('brain',mediation.latent.multiple.parallel$mediator2) &
+                                             !grepl('cc',mediation.latent.multiple.parallel$mediator2) &
+                                             grepl('heart_latent_pc2',mediation.latent.multiple.parallel$mediator1),]
+mediation.latent.multiple.parallel.final = process.mediation.results(mediation.latent.multiple.parallel)
+```
+
+```{r}
+write.csv(mediation.latent.multiple.parallel.final,
+          "tables/final/mediation.latent.multiple.parallel.csv")
+```
+
+# Multiple Mediation Residualized
+
+```{r}
+mediation.latent.multiple.parallel.resid = run.multiple.parallel.mediation(latents.covariates.residualized.scaled, 
+                                                   independent.variable,
+                                                   dependent.variable,
+                                                   mediators, covariates)
+mediation.latent.multiple.parallel.resid = 
+  mediation.latent.multiple.parallel.resid[grepl('brain',mediation.latent.multiple.parallel.resid$mediator2) &
+                                             !grepl('cc',mediation.latent.multiple.parallel.resid$mediator2) &
+                                             grepl('heart_latent_pc2',mediation.latent.multiple.parallel.resid$mediator1),]
+mediation.latent.multiple.parallel.resid.final = process.mediation.results(mediation.latent.multiple.parallel.resid)
+```
+
+```{r}
+write.csv(mediation.latent.multiple.parallel.resid.final,
+          "tables/final/mediation.latent.multiple.parallel.resid.csv")
+```
+
+```{r}
+toplot.ie1 = mediation.latent.multiple.parallel.resid.final[grepl('ie1',mediation.latent.multiple.parallel.resid.final$label),]
+toplot.ie1$mediator = toplot.ie1$mediator2
+toplot.ie1 = dplyr::select(toplot.ie1, -c('mediator1','mediator2'))
+sorting = rev(toplot.ie1$mediator) 
+sequential.plot(toplot.ie1, sorting,'1',c(-0.07,0.01))
+ggsave('figures/analysis/mediation.latent.multiple.parallel.heart.ie1.png')
+```
+
+```{r}
+toplot.ie2 = mediation.latent.multiple.parallel.resid.final[grepl('ie2',mediation.latent.multiple.parallel.resid.final$label),]
+toplot.ie2$mediator = toplot.ie2$mediator2
+toplot.ie2 = dplyr::select(toplot.ie2, -c('mediator1','mediator2'))
+sorting = rev(toplot.ie2$mediator) 
+sequential.plot(toplot.ie2, sorting,'2',c(-0.02,0.01))
+ggsave('figures/analysis/mediation.latent.multiple.parallel.heart.ie2.png')
+```
+
+
+# Old Plots
+
+```{r}
+single.results = read.csv("tables/final/mediation.latent.single.residualized.csv",row.names=1)
+```
+
+```{r}
+pc2_single = single.results[12,]
+pc2_pairwise = mediation.latent.pairwise.resid[mediation.latent.pairwise.resid$mediator1 == 'heart_latent_pc2' &
+                                               mediation.latent.pairwise.resid$label =='ie1',]
+pc2_pairwise = dplyr::select(pc2_pairwise, -c('mediator1'))
+colnames(pc2_single) = colnames(pc2_pairwise)
+pcs = rbind(pc2_single, pc2_pairwise)
+pcs = pcs[!grepl('cc',pcs$mediator2),]
+```
+
+```{r}
+test = latent.sequential.mediation.residualized[grepl('ie2',latent.sequential.mediation.residualized$label),]
+test$pvalue_adj = p.adjust(test$pvalue, 'BH')
+test$significant = 
+  (test$pvalue_adj < 0.05) & (!is.na(test$pvalue_adj))
+sorting = sort.by.brain(test)
+sequential.plot(test, sorting,c(-0.02,0.01))
+#ggsave('figures/analysis/mediation.latent.pairwise.png')
+```
+
+
+
+

@@ -57,10 +57,11 @@ covariates = c('cov_age', 'cov_sex')
 ```{r}
 mediation.individual.pairs = mediation.ind.dep.pairs(latents.covariates.cardio.cog, 
                                                      cardio.features, cog.features, mediators, covariates)
+mediation.individual.pairs.final = process.mediation.results(mediation.individual.pairs)
 ```
 
 ```{r}
-write.csv(mediation.individual.pairs,
+write.csv(mediation.individual.pairs.final,
           "tables/final/mediation.individual.pairs.csv")
 ```
 
@@ -69,16 +70,17 @@ write.csv(mediation.individual.pairs,
 ```{r}
 mediation.individual.pairs.resid = mediation.ind.dep.pairs(latents.covariates.cardio.cog.resid, 
                                                      cardio.features, cog.features, mediators, covariates)
+mediation.individual.pairs.resid.final = process.mediation.results(mediation.individual.pairs.resid)
 ```
 
 ```{r}
-write.csv(mediation.individual.pairs.resid,
+write.csv(mediation.individual.pairs.resid.final,
           "tables/final/mediation.individual.pairs.resid.csv")
 ```
 
 
 ```{r}
-for (ind.dep in unique(paste(mediation.individual.pairs.resid$independent, mediation.individual.pairs.resid$dependent))) {
+for (ind.dep in unique(paste(mediation.individual.pairs.resid.final$independent, mediation.individual.pairs.resid.final$dependent))) {
   ind.dep = strsplit(ind.dep,' ')[[1]]
   independent = ind.dep[1]
   dependent = ind.dep[2]
@@ -86,8 +88,8 @@ for (ind.dep in unique(paste(mediation.individual.pairs.resid$independent, media
   if (independent == 'cardio_whr') {
     ylims = c(-0.1,0.075)
   }
-  to.plot = mediation.individual.pairs.resid[mediation.individual.pairs.resid$independent==independent &
-                                                           mediation.individual.pairs.resid$dependent==dependent,]
+  to.plot = mediation.individual.pairs.resid.final[mediation.individual.pairs.resid.final$independent==independent &
+                                                           mediation.individual.pairs.resid.final$dependent==dependent,]
   sorting = sort.by.ies(to.plot)
   plot.obj = direct.indirect.plot(to.plot,sorting, ylims=ylims)
   print(plot.obj)
