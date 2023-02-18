@@ -1,0 +1,95 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+# Set Up
+```{r setup}
+knitr::opts_knit$set(root.dir = normalizePath("../.."))
+```
+
+# Imports
+```{r}
+library(finalfit)
+library(mice)
+library(purrr)
+library(dplyr)
+library(lavaan)
+library(ggplot2)
+library(gplots)
+source('functions/mediation.R')
+source('functions/med.plots.R')
+```
+
+# Load Data
+```{r}
+latents.covariates.scaled = 
+  read.csv('data_derived/merged/latents.covariates.scaled.csv')
+latents.covariates.residualized.scaled = read.csv('data_derived/merged/latents.covariates.residualized.scaled.csv')
+```
+
+
+# Sequential Multiple Mediation
+```{r}
+independent.variable = 'cardio_latent_gvrf'
+dependent.variable   = 'cog_latent_g'
+mediators = colnames(latents.covariates.scaled)[grepl('latent',colnames(latents.covariates.scaled)) &
+                                                grepl('heart|brain',colnames(latents.covariates.scaled))]
+covariates = c('cov_age', 'cov_sex')
+```
+
+```{r}
+mediation.latent.multiple.sequential = run.multiple.sequential.mediation(latents.covariates.scaled,
+                                                                               independent.variable, dependent.variable, 
+                                                                               mediators, covariates)
+mediation.latent.multiple.sequential = 
+  mediation.latent.multiple.sequential[
+    grepl('brain',mediation.latent.multiple.sequential$mediator2) & 
+      !grepl('cc',mediation.latent.multiple.sequential$mediator2) ,]
+
+mediation.latent.multiple.sequential.final = process.mediation.results(mediation.latent.multiple.sequential)
+```
+
+```{r}
+write.csv(mediation.latent.multiple.sequential.final,
+          "tables/final/mediation.latent.multiple.sequential.csv")
+```
+
+
+# Simple Mediation Model for each Mediator Residualized
+```{r}
+mediation.latent.multiple.sequential.resid = run.multiple.sequential.mediation(latents.covariates.residualized.scaled,
+                                                                               independent.variable, dependent.variable, 
+                                                                               mediators, covariates)
+mediation.latent.multiple.sequential.resid = 
+  mediation.latent.multiple.sequential.resid[
+    grepl('brain',mediation.latent.multiple.sequential.resid$mediator2) & 
+      !grepl('cc',mediation.latent.multiple.sequential.resid$mediator2) ,]
+
+mediation.latent.multiple.sequential.resid.final = process.mediation.results(mediation.latent.multiple.sequential.resid)
+```
+
+```{r}
+write.csv(mediation.latent.multiple.sequential.resid.final,
+          "tables/final/mediation.latent.multiple.sequential.resid.csv")
+```
+
+```{r}
+toplot.ie1 = mediation.latent.multiple.sequential.resid.final[grepl('ie1',mediation.latent.multiple.sequential.resid.final$label),]
+toplot.ie1$mediator = toplot.ie1$mediator2
+toplot.ie1 = dplyr::select(toplot.ie1, -c('mediator2'))
+sorting = rev(toplot.ie1$mediator) 
+sequential.plot(toplot.ie1, sorting,'1',c(-0.07,0.01))
+ggsave('figures/analysis/mediation.latent.multiple.sequential.heart.ie1.png')
+```
+
+```{r}
+toplot.ie2 = mediation.latent.multiple.sequential.resid.final[grepl('ie2',mediation.latent.multiple.sequential.resid.final$label),]
+toplot.ie2$mediator = toplot.ie2$mediator2
+toplot.ie2 = dplyr::select(toplot.ie2, -c('mediator2'))
+sorting = rev(toplot.ie2$mediator) 
+sequential.plot(toplot.ie2, sorting,'2',c(-0.02,0.01))
+ggsave('figures/analysis/mediation.latent.multiple.sequential.heart.ie2.png')
+```
+
+

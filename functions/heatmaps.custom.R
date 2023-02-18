@@ -5,8 +5,8 @@ library(scales)
 
 heatmap.with.labels = function(cor.data, min, max, label) {
   ggplot(melt(cor.data), 
-         #aes(Var2,ordered(Var1,levels=rev(levels(Var1))),fill=value)) + 
-         aes(Var2,Var1,fill=value)) +
+         aes(Var2,ordered(Var1,levels=rev(levels(Var1))),fill=value)) + 
+         #aes(Var2,Var1,fill=value)) +
     scale_fill_gradient2(low=muted("red"),mid="white",high=muted("blue"),
                          midpoint=0,
                          limits=c(min, max)) +
@@ -28,8 +28,8 @@ heatmap.with.labels = function(cor.data, min, max, label) {
 
 heatmap.with.nolabels = function(cor.data, min, max, label) {
   ggplot(melt(cor.data), 
-         #aes(Var2,ordered(Var1,levels=rev(levels(Var1))),fill=value)) + 
-         aes(Var2,Var1,fill=value)) +
+         aes(Var2,ordered(Var1,levels=rev(levels(Var1))),fill=value)) + 
+         #aes(Var2,Var1,fill=value)) +
     scale_fill_gradient2(low=muted("red"),mid="white",high=muted("blue"),
                          midpoint=0,
                          limits=c(min, max)) +
@@ -42,7 +42,7 @@ heatmap.with.nolabels = function(cor.data, min, max, label) {
       axis.line=element_blank(),
       #axis.text.x = element_text(angle = 45, vjust = 1, hjust=1),
       axis.text.x = element_blank(),
-      axis.text.y = element_blank(),
+      #axis.text.y = element_blank(),
       axis.ticks.x = element_blank(),
       axis.ticks.y = element_blank(),
       axis.title.x = element_blank(),

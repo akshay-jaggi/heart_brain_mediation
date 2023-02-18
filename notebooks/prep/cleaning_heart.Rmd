@@ -17,6 +17,7 @@ library(mice)
 # Load Data
 ```{r}
 heart.radiomics = read.csv("data/heart.radiomics.csv")
+heart.traditional = read.csv("data/cardio.data.csv")
 ```
 
 # Prep Radiomics Data
@@ -47,17 +48,25 @@ heart.radiomics.touse = heart.radiomics.notdeprecated[,
                                                   colnames(heart.radiomics.notdeprecated))]
 ```
 
+# Prep Traditional Metrics
+```{r}
+heart.traditional = heart.traditional[,grepl('cmr_|f.eid',colnames(heart.traditional))]
+```
+
+
 # Completeness
 ```{r}
 hist(apply(heart.radiomics.touse, 1, function(x) sum(is.na(x))))
 ```
 
 ```{r}
+heart.traditional.final = heart.traditional[complete.cases(heart.traditional),]
 heart.radiomics.final = heart.radiomics.touse[complete.cases(heart.radiomics.touse),]
-heart.radiomics.final = heart.radiomics.final %>% select(f.eid, everything())
+heart.imaging.final = merge(heart.radiomics.final, heart.traditional.final,by='f.eid')
+heart.imaging.final = heart.imaging.final %>% dplyr::select(f.eid, everything())
 ```
 
 # Save
 ```{r}
-write.csv(heart.radiomics.final,'data_derived/cleaned/heart_cleaned.csv', row.names = FALSE)
+write.csv(heart.imaging.final,'data_derived/cleaned/heart_cleaned.csv', row.names = FALSE)
 ```

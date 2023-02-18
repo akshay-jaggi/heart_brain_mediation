@@ -39,8 +39,8 @@ brain.ccs$brain_latent_cc1 = - brain.ccs$brain_latent_cc1
 heart.ccs$heart_latent_cc2 = - heart.ccs$heart_latent_cc2
 brain.ccs$brain_latent_cc2 = - brain.ccs$brain_latent_cc2
 # Flip the CC3 axes so that they increase with greater ES myocardial intensity / MD
-heart.ccs$heart_latent_cc3 = - heart.ccs$heart_latent_cc3
-brain.ccs$brain_latent_cc3 = - brain.ccs$brain_latent_cc3
+# heart.ccs$heart_latent_cc3 = - heart.ccs$heart_latent_cc3
+# brain.ccs$brain_latent_cc3 = - brain.ccs$brain_latent_cc3
 ```
 
 # Merge

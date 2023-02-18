@@ -16,6 +16,7 @@ library(purrr)
 library(dplyr)
 library(lavaan)
 library(ggplot2)
+library(qwraps2)
 ```
 
 # Load Data
@@ -66,7 +67,10 @@ latents.covariates.residualized = latents.covariates
 to.residualize = colnames(latents.covariates)[grepl('latent',colnames(latents.covariates)) &
                                                 grepl('heart|brain',colnames(latents.covariates))]
 for(latent in to.residualize) {
-  if(grepl('heart',latent)) {
+  if (grepl('cc', latent)) {
+    lin.model = paste(c(latent," ~ cov_bsa + -cov_headsize + cov_pos_x + cov_pos_y + cov_pos_z"),collapse='')
+  }
+  else if (grepl('heart',latent)) {
     lin.model = paste(c(latent," ~ cov_bsa"),collapse='')
   } else {
     lin.model = paste(c(latent," ~  -cov_headsize + cov_pos_x + cov_pos_y + cov_pos_z"),collapse='')
@@ -140,7 +144,7 @@ latents.covariates.residualized[,c('cov_age',
   geom_smooth(method=lm) + ylim(-7,7) + xlab('age') + ylab('normalized residual') + 
   facet_wrap(~ variable)  + 
   theme_classic()
-#ggsave('figures/analysis/age.ccs.png')
+ggsave('figures/analysis/age.ccs.png')
 ```
 ```{r}
 test = latents.covariates.residualized %>% 
@@ -174,21 +178,43 @@ ggsave('figures/analysis/age.ends.png')
 ```{r}
 all.features = 
   read.csv('data_derived/merged/vrf.cog.heart.brain.new.healthy.csv')
+all.features$cardio_pp = all.features$cardio_sbp - all.features$cardio_dbp
 ```
 
 ```{r}
-all.features.to.report = all.features[,grepl('cov_sex|cov_age|cov_headsize|cov_bsa',colnames(all.features)) |
-                                        grepl('cardio|cog',colnames(all.features))]
-binary.features = grep('cardio_hypertension|cardio_diabetes|cardio_hyperchol|cog_prosmem|cov_sex',
-                       colnames(all.features.to.report))
-all.features.to.report[,binary.features] = 
-  sapply(
-    all.features.to.report[,binary.features],
-    as.logical)
+big.summary <- list(
+  "Demographics" = list(
+    "Age" = ~mean_sd(cov_age, denote_sd = "paren"),
+    "Sex" = ~n_perc(cov_sex==0),
+    "Ethnicity" = ~n_perc(cov_ethnicity=='British')),
+  "VRFs" = list(
+    "Hypertension" = ~n_perc(cardio_hypertension),
+    "Diabetes" = ~n_perc(cardio_diabetes),
+    "Hypercholesterolemia" = ~n_perc(cardio_hyperchol),
+    "Pack Years" = ~mean_sd(cardio_pack_years, denote_sd = "paren"),
+    "Pulse Pressure" = ~mean_sd(cardio_pp, denote_sd = "paren"),
+    "BMI" = ~mean_sd(cardio_bmi, denote_sd = "paren"),
+    "WHR" = ~mean_sd(cardio_whr, denote_sd = "paren")),
+  "Cognitive Exams" = list(
+    "Verbal Numerical Reasoning" = ~mean_sd(cog_vnr, denote_sd = "paren"),
+    "Log Reaction Time" = ~mean_sd(cog_rt, denote_sd = "paren"),
+    "Log Visual Memory" = ~mean_sd(cog_vismem, denote_sd = "paren"),
+    "Prospective Memory" = ~n_perc(cog_prosmem)),
+  "CMR Indices" = list(
+    "LV Ejection Fraction" = ~mean_sd(heart_cmr_LVEF, denote_sd = "paren"),
+    "Myocardial Intensity (ES)" = ~mean_sd(heart_intensity_Mean_MYO_ES, denote_sd = "paren"),
+    "Myocardial Entropy (ES)" = ~mean_sd(heart_intensity_Entropy_MYO_ES, denote_sd = "paren")),
+  "Brain MRI" = list(
+    "Total brain volume" = ~mean_sd(brain_bio.volume_of_brain._grey.white_matter.0.imaging, 
+                                   denote_sd = "paren"),
+    "Grey matter volume" = ~mean_sd(brain_bio.volume_of_grey_matter.0.imaging, 
+                                   denote_sd = "paren")))
 ```
 
+
 ```{r}
-summary.data.frame(all.features.to.report)
+dem.table = qwraps2::summary_table(all.features, big.summary)
+write.csv(dem.table,'tables/final/demographics.csv')
 ```
 
 

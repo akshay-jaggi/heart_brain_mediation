@@ -45,6 +45,9 @@ dummy$est.std = rep(0,3)
 lin.model.pairwise = list()
 for(my.var in latent.names) {
   lin.model.pairwise[[my.var]] = list()
+  baseline = paste(c(my.var," ~ cov_age + cov_sex\n"),collapse = "")
+  baseline.sem = sem(baseline,latents.covariates.scaled)
+  baseline.r = lavInspect(baseline.sem,'rsquare')
   for(my.other.var in latent.names) {
     # Fill with blanks if matched with self
     if (my.var == my.other.var) {
@@ -56,7 +59,8 @@ for(my.var in latent.names) {
     lin.model = paste(c(my.var," ~ ", my.other.var, "+ cov_age + cov_sex\n"),collapse = "")
     lin.model.sem = sem(lin.model,latents.covariates.scaled)
     out = standardizedsolution(lin.model.sem)
-    out$r = c(lavInspect(lin.model.sem,'rsquare'),rep(NA,9))
+    out$model.r = c(lavInspect(lin.model.sem,'rsquare'),rep(NA,9))
+    out$additional.r = c(lavInspect(lin.model.sem,'rsquare') - baseline.r,rep(NA,9))
     lin.model.pairwise[[my.var]][[my.other.var]] = out[out$op=="~"|out$op==":=",]
   }
 }
@@ -76,32 +80,16 @@ for(my.var in latent.names) {
 }
 ```
 
-```{r}
-new.tree.heatmap = function(data) { 
-  my_palette = colorRampPalette(c("darkred", "white", "darkblue"))(n = 50)
-    heatmap.2(data,
-              scale = 'none',
-            key.title = NULL,
-            key.xlab = "coefficient",
-            density.info = "none",
-            trace="none",
-            col=my_palette,
-            dendrogram = 'none',
-            Rowv= FALSE, 
-            Colv= "Rowv",
-            na.rm = TRUE,
-            cexRow = 1.2,
-            cexCol = 1.2,
-            srtCol = 45,
-            #breaks = seq(from = -0.25, to = 0.25, by = 0.01),
-            margins = c(4,17))
-  }
-```
 
 ```{r}
+better.names = stringr::str_replace_all(colnames(coef.grid),
+                                               c("_" = " ",
+                                                 "pc" = "PC",
+                                                 "cc" = "CC"))
+colnames(coef.grid) = better.names
+rownames(coef.grid) = better.names
 heatmap.with.labels(coef.grid, -1,1,'coefficient')
 ggsave('figures/analysis/linear.pairwise.png')
-#new.tree.heatmap(coef.grid)
 ```
 
 
@@ -131,6 +119,9 @@ latent.names = colnames(latents.covariates.scaled)[grepl('latent',colnames(laten
 lin.model.pairwise.residualized = list()
 for(my.var in latent.names) {
   lin.model.pairwise.residualized[[my.var]] = list()
+  baseline = paste(c(my.var," ~ cov_age + cov_sex\n"),collapse = "")
+  baseline.sem = sem(baseline,latents.covariates.residualized.scaled)
+  baseline.r = lavInspect(baseline.sem,'rsquare')
   for(my.other.var in latent.names) {
     # Fill with blanks if matched with self
     if (my.var == my.other.var) {
@@ -142,11 +133,13 @@ for(my.var in latent.names) {
     lin.model = paste(c(my.var," ~ ", my.other.var, "+ cov_age + cov_sex\n"),collapse = "")
     lin.model.sem = sem(lin.model,latents.covariates.residualized.scaled)
     out = standardizedsolution(lin.model.sem)
-    out$r = c(lavInspect(lin.model.sem,'rsquare'),rep(NA,9))
+    out$model.r = c(lavInspect(lin.model.sem,'rsquare'),rep(NA,9))
+    out$additional.r = c(lavInspect(lin.model.sem,'rsquare') - baseline.r,rep(NA,9))
     lin.model.pairwise.residualized[[my.var]][[my.other.var]] = out[out$op=="~"|out$op==":=",]
   }
 }
 ```
+
 
 
 ```{r}
@@ -169,10 +162,10 @@ for(my.var in latent.names) {
 ```
 
 ```{r}
-#png('figures/analysis/linear.pairwise.residualized.png', width = 1000, height = 800, units = "px")
+colnames(coef.grid.resid) = better.names
+rownames(coef.grid.resid) = better.names
 heatmap.with.labels(coef.grid.resid, -1,1,'coefficient')
 ggsave('figures/analysis/linear.pairwise.residualized.png')
-#dev.off()
 ```
 
 
@@ -186,14 +179,15 @@ write.csv(lin.to.save.residualized[
 ```
 
 ```{r}
-lin.to.save.residualized.final = dplyr::select(lin.to.save, -c('op','z','se'))
-lin.to.save.residualized.final = lin.to.save.residualized.final[(lin.to.save$rhs %in% latent.names) & (lin.to.save$rhs != lin.to.save$lhs),]
+lin.to.save.residualized.final = dplyr::select(lin.to.save.residualized, -c('z','se'))
+lin.to.save.residualized.final = lin.to.save.residualized.final[
+  (lin.to.save.residualized$rhs %in% latent.names) & (lin.to.save.residualized$rhs != lin.to.save.residualized$lhs),]
 write.csv(lin.to.save.residualized.final,
           "tables/final/linear.model.pairwise.residualized.csv")
 ```
 
 ```{r}
-gvrf.associations.final = lin.to.save.residualized.final[grepl('gvrf',lin.to.save.residualized.final$rhs),]
+gvrf.associations.final = lin.to.save.residualized.final[grepl('gvrf',lin.to.save.residualized.final$lhs),]
 write.csv(gvrf.associations.final,
           "tables/final/gvrf.associations.csv")
 ```
@@ -210,21 +204,23 @@ gvrf.heart.brain = lin.to.save.residualized[grepl('gvrf',lin.to.save.residualize
 test = factor(grepl('heart',gvrf.heart.brain$rhs))
 levels(test) = c('brain','heart')
 gvrf.heart.brain$class = test
-gvrf.heart.brain$sig = (gvrf.heart.brain$pvalue_adj < 0.01) & (!is.na(gvrf.heart.brain$pvalue_adj))
+gvrf.heart.brain$sig = (gvrf.heart.brain$pvalue_adj < 0.05) & (!is.na(gvrf.heart.brain$pvalue_adj))
 ```
 
 ```{r}
-ggplot(gvrf.heart.brain, aes(x = class, y = r)) + 
+ggplot(gvrf.heart.brain, aes(x = class, y = additional.r, fill = class)) + 
   geom_boxplot(outlier.shape = NA) + 
-  geom_point(aes(alpha=sig), position = position_jitter(0.1)) + 
-  ylab("R-squared") + 
-  scale_alpha_discrete('significant',labels=c('False','True')) + ylim(0,0.5) +
+  geom_point(position = position_jitter(0.1)) + 
+  ylab("Additional R-squared") + 
+  #scale_alpha_discrete('significant',labels=c('False','True')) + 
+  ylim(0,0.2) +
   ggtitle('gVRF') + 
   theme_classic()+ 
     theme(
   axis.title.x = element_blank(),
   axis.ticks.x = element_blank(),
-  plot.title = element_text(face='bold',hjust = 0.5))
+  plot.title = element_text(face='bold',hjust = 0.5)) +
+  scale_fill_manual(values = paletteer::paletteer_c("grDevices::Blue-Red",6)[c(2,5)] )
 ggsave('figures/analysis/linear.gvrf.residualized.png')
 ```
 
@@ -234,21 +230,25 @@ g.heart.brain = lin.to.save.residualized[grepl('cog_latent_g',lin.to.save.residu
 test = factor(grepl('heart',g.heart.brain$rhs))
 levels(test) = c('brain','heart')
 g.heart.brain$class = test
-g.heart.brain$sig = (g.heart.brain$pvalue_adj < 0.01) & (!is.na(g.heart.brain$pvalue_adj))
+g.heart.brain$sig = (g.heart.brain$pvalue_adj < 0.05) & (!is.na(g.heart.brain$pvalue_adj))
 ```
 
 ```{r}
-ggplot(g.heart.brain, aes(x = class, y = r)) + 
+ggplot(g.heart.brain, aes(x = class, y = additional.r, fill=class)) + 
   geom_boxplot(outlier.shape = NA) + 
   geom_point(aes(alpha=sig), position = position_jitter(0.1)) + 
-  ylab("R-squared") + 
+  ylab("Additional R-squared") + 
   scale_alpha_discrete('significant',labels=c('False','True')) +
   ggtitle('g') + 
-  scale_y_continuous(breaks=seq(0,0.1,0.02),limits=c(0,0.1)) +
+  scale_y_continuous(breaks=seq(0,0.05,0.02),limits=c(0,0.05)) +
   theme_classic()+ 
     theme(
   axis.title.x = element_blank(),
   axis.ticks.x = element_blank(),
-  plot.title = element_text(face='bold',hjust = 0.5))
-#ggsave('figures/analysis/linear.g.residualized.png')
+  plot.title = element_text(face='bold',hjust = 0.5)) + 
+  scale_fill_manual(values = paletteer::paletteer_c("grDevices::Blue-Red",6)[c(2,5)] )
+ggsave('figures/analysis/linear.g.residualized.png')
 ```
+
+
+

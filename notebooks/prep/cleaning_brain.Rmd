@@ -64,6 +64,7 @@ brain.mri.trad.final = brain.mri.traditional %>% select(f.eid, everything())
 ```
 
 # Get Complete Brain Data
+
 ```{r}
 brain.all.volumes = brain.mri[,grepl('volume_',colnames(brain.mri)) & 
                                 !grepl('normalised',colnames(brain.mri))]

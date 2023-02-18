@@ -17,6 +17,8 @@ library(dplyr)
 library(lavaan)
 library(ggplot2)
 library(gplots)
+source('functions/mediation.R')
+source('functions/med.plots.R')
 ```
 
 # Load Data
@@ -24,123 +26,76 @@ library(gplots)
 latents.covariates.scaled = 
   read.csv('data_derived/merged/latents.covariates.scaled.csv')
 latents.covariates.residualized.scaled = read.csv('data_derived/merged/latents.covariates.residualized.scaled.csv')
+#all.features = 
+#  read.csv('data_derived/merged/vrf.cog.heart.brain.trad.healthy.csv')
+#latents.covariates.scaled$cov_bmi = scale(all.features$cardio_bmi)
+#latents.covariates.residualized.scaled$cov_bmi = scale(all.features$cardio_bmi)
 ```
+
 
 # Simple Mediation Model for each Mediator 
 ```{r}
-effects = 
-"de := c
-ie := a*b
-te := c + a*b
-pm := 100 * (a*b) / (c+a*b)"
-```
-
-```{r}
+independent.variable = 'cardio_latent_gvrf'
+dependent.variable   = 'cog_latent_g'
 mediators = colnames(latents.covariates.scaled)[grepl('latent',colnames(latents.covariates.scaled)) &
                                                 grepl('heart|brain',colnames(latents.covariates.scaled))]
-med.results = list()
-for(mediator in mediators) {
-  med.model = paste(c(mediator," ~ a * cardio_latent_gvrf + cov_age + cov_sex\n",
-                      "cog_latent_g ~ c*cardio_latent_gvrf + b *",mediator,"+cov_age + cov_sex"),
-                    collapse = "")
-  med.model = paste(c(med.model, effects), collapse = '\n')
-  med.sem = 
-    sem(med.model,latents.covariates.scaled)
-  out = standardizedsolution(med.sem)
-  med.results[[mediator]] = out[out$op=="~"|out$op==":=",]
-}
+#covariates = c('cov_age', 'cov_sex','cov_bmi')
+covariates = c('cov_age', 'cov_sex')
 ```
 
 ```{r}
-med.frame = bind_rows(med.results, .id = "mediator")
-med.frame$pvalue_adj = med.frame$pvalue 
-med.frame$pvalue_adj[med.frame$lhs=='de'] = p.adjust(med.frame$pvalue[med.frame$lhs=='de'],'BH')
-med.frame$pvalue_adj[med.frame$lhs=='ie'] = p.adjust(med.frame$pvalue[med.frame$lhs=='ie'],'BH')
-write.csv(med.frame,"tables/analysis/mediation.latents.single.csv")
+mediation.latent.single = run.single.mediation(latents.covariates.scaled, 
+                                              independent.variable,
+                                              dependent.variable, 
+                                              mediators, covariates)
+mediation.latent.single.final = process.mediation.results(mediation.latent.single)
 ```
 
 ```{r}
-med.frame.final = dplyr::select(med.frame, -c('se','z'))
-med.frame.final = med.frame.final[med.frame.final$label != '',]
-write.csv(med.frame.final,"tables/final/mediation.latents.single.csv")
+write.csv(mediation.latent.single.final,
+          "tables/final/mediation.latent.single.csv")
 ```
 
-```{r}
-des = med.frame[med.frame$lhs=='de',]
-ies = med.frame[med.frame$lhs=='ie',]
-```
-
-```{r}
-ggplot(des, aes(x=mediator, y=est.std)) + 
-  geom_bar(stat="identity", fill='darkred') + 
-  geom_errorbar(aes(ymin=ci.lower, ymax=ci.upper),width=.2) + 
-  ylab('direct effect') + 
-  theme_classic() +  scale_y_continuous(breaks=seq(-0.1,0.1,0.05),limits=c(-0.1,0.1)) +
-  theme(axis.text.x = element_text(angle = 70, vjust = 0.9, hjust=1))
-ggsave('figures/analysis/direct.latents.single.png')
-```
-
-```{r}
-ggplot(ies, aes(x=mediator, y=est.std)) + 
-  geom_bar(stat="identity", fill ='darkblue') + 
-  geom_errorbar(aes(ymin=ci.lower, ymax=ci.upper),width=.2) + 
-  ylab('indirect effect') + 
-  theme_classic() + scale_y_continuous(breaks=seq(-0.05,0.05,0.05),limits=c(-0.075,0.075)) +
-  theme(axis.text.x = element_text(angle = 70, vjust = 0.9, hjust=1))
-ggsave('figures/analysis/indirect.latents.single.png')
-```
 
 # Simple Mediation Model for each Mediator Residualized
 
 ```{r}
-med.results.resid = list()
-for(mediator in mediators) {
-  med.model = paste(c(mediator," ~ a * cardio_latent_gvrf + cov_age + cov_sex\n",
-                      "cog_latent_g ~ c*cardio_latent_gvrf + b *",mediator,"+cov_age + cov_sex"),
-                    collapse = "")
-  med.model = paste(c(med.model, effects), collapse = '\n')
-  med.sem = 
-    sem(med.model,latents.covariates.residualized.scaled)
-  out = standardizedsolution(med.sem)
-  med.results.resid[[mediator]] = out[out$op=="~"|out$op==":=",]
-}
+mediation.latent.single.resid = run.single.mediation(latents.covariates.residualized.scaled, 
+                                              independent.variable,
+                                              dependent.variable, 
+                                              mediators, covariates)
+mediation.latent.single.resid.final = process.mediation.results(mediation.latent.single.resid)
 ```
 
 ```{r}
-med.frame.resid = bind_rows(med.results.resid, .id = "mediator")
-med.frame.resid$pvalue_adj = med.frame.resid$pvalue 
-med.frame.resid$pvalue_adj[med.frame.resid$lhs=='de'] = p.adjust(med.frame.resid$pvalue[med.frame.resid$lhs=='de'],'BH')
-med.frame.resid$pvalue_adj[med.frame.resid$lhs=='ie'] = p.adjust(med.frame.resid$pvalue[med.frame.resid$lhs=='ie'],'BH')
-write.csv(med.frame.resid,"tables/analysis/mediation.latents.single.residualized.csv")
+write.csv(mediation.latent.single.resid.final,
+          "tables/final/mediation.latent.single.residualized.csv")
+```
+
+# Eleanors Plots
+
+```{r}
+sorting = sort.by.ies(mediation.latent.single.resid.final)
+plot.obj = direct.indirect.plot(mediation.latent.single.resid.final,sorting, ylims=c(-0.075,0.06))
+print(plot.obj)
+ggsave('figures/analysis/mediation.latent.single.png')
+```
+
+
+
+# Fun Control
+```{r}
+independent.variable = 'cardio_latent_gvrf'
+dependent.variable   = 'cog_latent_g'
+mediators = c('heart_latent_cc2')
+covariates = c('cov_age', 'cov_sex', 'heart_latent_pc2', 'brain_latent_grey','brain_latent_atrophy')
 ```
 
 ```{r}
-med.frame.resid.final = dplyr::select(med.frame.resid, -c('se','z'))
-med.frame.resid.final = med.frame.resid.final[med.frame.resid.final$label != '',]
-write.csv(med.frame.resid.final,"tables/final/mediation.latents.single.residualized.csv")
+mediation.latent.fun = run.single.mediation(latents.covariates.residualized.scaled, 
+                                              independent.variable,
+                                              dependent.variable, 
+                                              mediators, covariates)
+mediation.latent.fun.final = process.mediation.results(mediation.latent.fun)
 ```
 
-```{r}
-des.resid = med.frame.resid[med.frame.resid$lhs=='de',]
-ies.resid = med.frame.resid[med.frame.resid$lhs=='ie',]
-```
-
-```{r}
-ggplot(des.resid, aes(x=mediator, y=est.std)) + 
-  geom_bar(stat="identity", fill='darkred') + 
-  geom_errorbar(aes(ymin=ci.lower, ymax=ci.upper),width=.2) + 
-  ylab('direct effect') + 
-  theme_classic() +  scale_y_continuous(breaks=seq(-0.1,0.1,0.05),limits=c(-0.1,0.1)) +
-  theme(axis.text.x = element_text(angle = 70, vjust = 0.9, hjust=1))
-ggsave('figures/analysis/direct.latents.single.residualized.png')
-```
-
-```{r}
-ggplot(ies.resid, aes(x=mediator, y=est.std)) + 
-  geom_bar(stat="identity", fill ='darkblue') + 
-  geom_errorbar(aes(ymin=ci.lower, ymax=ci.upper),width=.2) + 
-  ylab('indirect effect') + 
-  theme_classic() + scale_y_continuous(breaks=seq(-0.05,0.05,0.05),limits=c(-0.075,0.075)) +
-  theme(axis.text.x = element_text(angle = 70, vjust = 0.9, hjust=1))
-ggsave('figures/analysis/indirect.latents.single.residualized.png')
-```

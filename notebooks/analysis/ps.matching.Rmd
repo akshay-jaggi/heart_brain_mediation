@@ -24,9 +24,9 @@ matched.ttests = function(subjects.matched, feature.tag) {
     ttest.list[[feature]] = t.test(as.formula(paste(feature,"~ case",sep='')), subjects.matched)
   }
   ttests = data.frame(t(sapply(ttest.list, function(x) c(x$estimate[1], x$estimate[2], 
-                                     ci.lower = x$conf.int[1],ci.upper = x$conf.int[2],
+                                     ci.lower = -x$conf.int[2],ci.upper = -x$conf.int[1],
                                      p.value = x$p.value))))
-  ttests$pvalue_adj = p.adjust(ttests$p.value,'BH')
+  #ttests$pvalue_adj = p.adjust(ttests$p.value,'BH')
   ttests$diff = ttests$mean.in.group.Risk - ttests$mean.in.group.Control
   ttests$percent.diff = 100 *
     (ttests$mean.in.group.Risk - ttests$mean.in.group.Control) / ttests$mean.in.group.Control
@@ -45,18 +45,30 @@ all.features =
 
 # Propensity Score Matching
 ```{r}
-features.with.agg = merge(all.features, dplyr::select(latents,c('f.eid','cardio_latent_agg')), by='f.eid')
+#features.with.agg = merge(all.features, dplyr::select(latents,c('f.eid','cardio_latent_agg')), by='f.eid')
+features.with.agg = merge(all.features, latents, by='f.eid')
+#features.with.agg$hba = abs(features.with.agg$heart_latent_cc2) > 2e-5
+#features.with.agg$heart_zscore = scale(features.with.agg$heart_cmr_LVSV)
 subjects.to.match = features.with.agg[features.with.agg$cardio_latent_agg == 0 | 
-                                        features.with.agg$cardio_latent_agg >= 5,]
-subjects.to.match$case = factor(ifelse(subjects.to.match$cardio_latent_agg == 0,"Control","Risk"))
+                                        features.with.agg$cardio_latent_agg >= 4,]
+#subjects.to.match = features.with.agg[features.with.agg$hba,]
+subjects.to.match$case = factor(ifelse(subjects.to.match$cardio_latent_agg==0,"Control","Risk"))
 ```
 
 ```{r}
-match.model <- matchit(case ~ cov_age + cov_headsize + cov_bsa,
-                       method = "nearest", exact = 'cov_sex', distance = "glm", data = subjects.to.match)
-summary(match.model)
-subjects.matched = match.data(match.model)
+match.women <- matchit(case ~ cov_age + cov_headsize + cov_bsa,
+                       method = "nearest", caliper = 0.05, distance = "glm", 
+                       data = subjects.to.match[subjects.to.match$cov_sex==0,])
+match.men <- matchit(case ~ cov_age + cov_headsize + cov_bsa,
+                       method = "nearest", caliper = 0.05, distance = "glm", 
+                       data = subjects.to.match[subjects.to.match$cov_sex==1,])
+summary(match.women)
+summary(match.men)
+matched.women = match.data(match.women)
+matched.men = match.data(match.men)
+subjects.matched = rbind(matched.women, matched.men)
 ```
+
 
 ## Unpaired T-Tests
 
@@ -77,9 +89,17 @@ cardio.ttests$mean.in.group.Risk[rownames(cardio.ttests) =='cardio_hyperchol'] =
   sum(subjects.matched$cardio_hyperchol)
 ```
 
+```{r}
+cog.ttests$mean.in.group.Control[rownames(cog.ttests) == 'cog_prosmem'] = 
+  sum(subjects.matched$cog_prosmem[subjects.matched$case=='Control'])
+cog.ttests$mean.in.group.Risk[rownames(cog.ttests) == 'cog_prosmem'] = 
+  sum(subjects.matched$cog_prosmem[subjects.matched$case=='Risk'])
+```
 
 ```{r}
-ps.matched.ttests = rbind(cov.ttests, cardio.ttests, cog.ttests, heart.ttests, brain.ttests)
+ps.matched.ttests = rbind(cov.ttests, cardio.ttests, cog.ttests, heart.ttests, brain.ttests) 
+ps.matched.ttests$pvalue_adj =  p.adjust(ps.matched.ttests$p.value,'BH')
+ps.matched.ttests$significant = ps.matched.ttests$pvalue_adj < 0.05
 write.csv(ps.matched.ttests, "tables/analysis/ps.matched.ttests.csv")
 write.csv(ps.matched.ttests, "tables/final/ps.matched.ttests.csv")
 ```

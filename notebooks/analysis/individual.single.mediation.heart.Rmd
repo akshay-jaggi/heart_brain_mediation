@@ -17,6 +17,13 @@ library(dplyr)
 library(lavaan)
 library(ggplot2)
 library(gplots)
+source('functions/mediation.R')
+```
+
+```{r}
+get.heart.feature.name = function(name) {
+  return(paste(strsplit(name,'_')[[1]][-1:-2],collapse="_"))
+}
 ```
 
 # Load Data
@@ -28,9 +35,18 @@ all.features =
   read.csv('data_derived/merged/vrf.cog.heart.brain.trad.healthy.csv')
 ```
 
-# Individual Heart Feature Mediation 
+```{r}
+clusters = read.csv('data/heart.radiomics.clustering.csv')
+```
 
-## Scale and Residualize Heart Features
+```{r}
+clusters$type = factor(clusters$type, 
+                           levels = 
+                             c("Size", "Local Uniformity", "Global Variance", 
+                               "Shape", "Local Dimness", "Global Intensity","Traditional"))
+```
+
+# Scale and Residualize Heart Features
 
 ```{r}
 heart = all.features[,grepl('heart_',colnames(all.features))]
@@ -49,238 +65,62 @@ heart = data.frame(scale(heart))
 
 
 ```{r}
-latents.covariates.radiomics = cbind(latents.covariates.scaled, heart)
-latents.covariates.radiomics.residualized = cbind(latents.covariates.residualized.scaled, heart.residualized)
+latents.covariates.heart = cbind(latents.covariates.scaled, heart)
+latents.covariates.heart.residualized = cbind(latents.covariates.residualized.scaled, heart.residualized)
 ```
 
-## Run Models
-```{r}
-effects = 
-"de := c
-ie := a*b
-te := c + a*b
-pm := 100 * (a*b) / (c+a*b)"
-```
+# Individual Heart Feature Mediation 
 
 ```{r}
-ind.results = list()
-for(mediator in colnames(heart)) {
-  med.model = paste(c(mediator," ~ a * cardio_latent_gvrf + cov_age + cov_sex\n",
-                      "cog_latent_g ~ c*cardio_latent_gvrf + b *",mediator,"+cov_age + cov_sex"),
-                    collapse = "")
-  med.model = paste(c(med.model, effects), collapse = '\n')
-  med.sem = 
-    sem(med.model,latents.covariates.radiomics)
-  out = standardizedsolution(med.sem)
-  ind.results[[mediator]] = out[out$op=="~"|out$op==":=",]
-}
+independent.variable = 'cardio_latent_gvrf'
+dependent.variable   = 'cog_latent_g'
+mediators = colnames(heart)
+covariates = c('cov_age', 'cov_sex')
 ```
 
 ```{r}
-heart.ind.frame = bind_rows(ind.results, .id = "mediator")
-```
-
-## Cluster and Display
-```{r}
-clusters = read.csv('data/heart.radiomics.clustering.csv')
-```
-
-```{r}
-clusters$cluster = as.factor(clusters$cluster)
-clusters$nickname = factor(clusters$nickname, 
-                           levels = 
-                             c("Size", "Local Uniformity", "Global Variance", 
-                               "Shape", "Local Dimness", "Global Intensity"))
-```
-
-## Direct
-```{r}
-large.des = heart.ind.frame[heart.ind.frame$lhs == 'de',]
-large.des$pvalue_adj = p.adjust(large.des$pvalue,'BH')
+mediation.individual.single.heart = run.single.mediation(latents.covariates.heart, 
+                                              independent.variable,
+                                              dependent.variable, 
+                                              mediators, covariates)
+mediation.individual.single.heart.final = process.mediation.results(mediation.individual.single.heart)
 ```
 
 ```{r}
-large.des$features = unlist(lapply(large.des$mediator, function(x) paste(strsplit(x,'_')[[1]][-1:-2],collapse="_")))
-large.des.toplot = merge(large.des, clusters, by='features')
+mediation.individual.single.heart.final$feature = 
+  sapply(mediation.individual.single.heart.final$mediator, get.heart.feature.name)
+mediation.individual.single.heart.final = merge(mediation.individual.single.heart.final, clusters, by='feature')
+mediation.individual.single.heart.final = 
+  mediation.individual.single.heart.final[,!(colnames(mediation.individual.single.heart.final) == 'feature')]
 ```
 
 ```{r}
-large.des.toplot$sig = large.des.toplot$pvalue_adj < 0.05
-large.des.toplot$sig[is.na(large.des.toplot$sig)] = FALSE
-ggplot(large.des.toplot, aes(x = cluster, y = est.std, fill = cluster)) + 
-  geom_boxplot() + 
-  geom_point(aes(alpha=sig), position = position_jitter(0.1)) + 
-  scale_fill_manual(name = "cluster", 
-                    labels = levels(large.des.toplot$nickname), 
-                    values = levels(large.des.toplot$cluster)) + 
-  ylab("direct effect") + 
-  scale_alpha_discrete('significant',labels=c('False','True')) + 
-  scale_y_continuous(breaks=seq(-0.05,0.05,0.05),limits=c(-0.075,0.075)) +
-  theme_classic()+ 
-    theme(
-  axis.title.x = element_blank(),
-  axis.text.x = element_blank(),
-  axis.ticks.x = element_blank())
-ggsave('figures/analysis/direct.individual.single.heart.png')
+write.csv(mediation.individual.single.heart.final,
+          "tables/final/mediation.individual.single.heart.csv")
+```
+
+# Individual Heart Feature Mediation Residualized
+
+```{r}
+mediation.individual.single.heart.resid = run.single.mediation(latents.covariates.heart.residualized, 
+                                              independent.variable,
+                                              dependent.variable, 
+                                              mediators, covariates)
+mediation.individual.single.heart.resid.final = process.mediation.results(mediation.individual.single.heart.resid)
 ```
 
 ```{r}
-write.csv(large.des.toplot,"tables/analysis/direct.individual.single.heart.csv")
-```
-
-## Indirect
-
-```{r}
-large.ies = heart.ind.frame[heart.ind.frame$lhs == 'ie',]
-large.ies$pvalue_adj = p.adjust(large.ies$pvalue,'BH')
-```
-
-```{r}
-large.ies$features = unlist(lapply(large.ies$mediator, function(x) paste(strsplit(x,'_')[[1]][-1:-2],collapse="_")))
-large.ies.toplot = merge(large.ies, clusters, by='features')
+mediation.individual.single.heart.resid.final$feature = 
+  sapply(mediation.individual.single.heart.resid.final$mediator, get.heart.feature.name)
+mediation.individual.single.heart.resid.final = 
+  merge(mediation.individual.single.heart.resid.final, clusters, by='feature')
+mediation.individual.single.heart.resid.final = 
+  mediation.individual.single.heart.resid.final[,!(colnames(mediation.individual.single.heart.resid.final) == 'feature')]
 ```
 
 ```{r}
-large.ies.toplot$sig = large.ies.toplot$pvalue_adj < 0.05
-large.ies.toplot$sig[is.na(large.ies.toplot$sig)] = FALSE
-ggplot(large.ies.toplot, aes(x = cluster, y = est.std, fill = cluster)) + 
-  geom_boxplot() + 
-  geom_point(aes(alpha=sig), position = position_jitter(0.1)) + 
-  scale_fill_manual(name = "cluster", 
-                    labels = levels(large.ies.toplot$nickname), 
-                    values = levels(large.ies.toplot$cluster)) + 
-  ylab("indirect effect") + 
-  scale_alpha_discrete('significant',labels=c('False','True')) + 
-  scale_y_continuous(breaks=seq(-0.05,0.05,0.05),limits=c(-0.075,0.075)) +
-  theme_classic()+ 
-    theme(
-  axis.title.x = element_blank(),
-  axis.text.x = element_blank(),
-  axis.ticks.x = element_blank())
-ggsave('figures/analysis/indirect.individual.single.heart.png')
-```
-
-```{r}
-write.csv(large.ies.toplot,"tables/analysis/indirect.individual.single.heart.csv")
-```
-
-```{r}
-write.csv(heart.ind.frame,"tables/analysis/mediation.individual.single.heart.csv")
-```
-
-```{r}
-heart.ind.frame.final = dplyr::select(heart.ind.frame, -c('se','z'))
-heart.ind.frame.final = heart.ind.frame.final[heart.ind.frame.final$label != '',]
-write.csv(heart.ind.frame.final,"tables/final/mediation.individual.single.heart.csv")
-```
-
-## Run Residuals
-```{r}
-ind.results.residualized = list()
-for(mediator in colnames(heart)) {
-  med.model = paste(c(mediator," ~ a * cardio_latent_gvrf + cov_age + cov_sex\n",
-                      "cog_latent_g ~ c*cardio_latent_gvrf + b *",mediator,"+cov_age + cov_sex"),
-                    collapse = "")
-  med.model = paste(c(med.model, effects), collapse = '\n')
-  med.sem = 
-    sem(med.model,latents.covariates.radiomics.residualized)
-  out = standardizedsolution(med.sem)
-  ind.results.residualized[[mediator]] = out[out$op=="~"|out$op==":=",]
-}
-```
-
-```{r}
-heart.ind.frame.residualized = bind_rows(ind.results.residualized, .id = "mediator")
-```
-
-```{r}
-large.des.residualized = heart.ind.frame.residualized[heart.ind.frame.residualized$lhs == 'de',]
-large.des.residualized$pvalue_adj = p.adjust(large.des.residualized$pvalue,'BH')
-```
-
-## Cluster and Display
-```{r}
-clusters = read.csv('data/heart.radiomics.clustering.csv')
-```
-
-```{r}
-clusters$cluster = as.factor(clusters$cluster)
-clusters$nickname = factor(clusters$nickname, 
-                           levels = 
-                             c("Size", "Local Uniformity", "Global Variance", 
-                               "Shape", "Local Dimness", "Global Intensity"))
+write.csv(mediation.individual.single.heart.resid.final,
+          "tables/final/mediation.individual.single.heart.residualized.csv")
 ```
 
 
-```{r}
-large.des.residualized$features = unlist(lapply(large.des.residualized$mediator, function(x) paste(strsplit(x,'_')[[1]][-1:-2],collapse="_")))
-large.des.toplot.residualized = merge(large.des.residualized, clusters, by='features')
-```
-
-```{r}
-large.des.toplot.residualized$sig = large.des.toplot.residualized$pvalue_adj < 0.05
-large.des.toplot.residualized$sig[is.na(large.des.toplot.residualized$sig)] = FALSE
-ggplot(large.des.toplot.residualized, aes(x = cluster, y = est.std, fill = cluster)) + 
-  geom_boxplot() + 
-  geom_point(aes(alpha=sig), position = position_jitter(0.1)) + 
-  scale_fill_manual(name = "cluster", 
-                    labels = levels(large.des.toplot.residualized$nickname), 
-                    values = levels(large.des.toplot.residualized$cluster)) + 
-  ylab("direct effect") + 
-  scale_alpha_discrete('significant',labels=c('False','True')) + 
-  scale_y_continuous(breaks=seq(-0.05,0.05,0.05),limits=c(-0.075,0.075)) +
-  theme_classic()+ 
-    theme(
-  axis.title.x = element_blank(),
-  axis.text.x = element_blank(),
-  axis.ticks.x = element_blank())
-ggsave('figures/analysis/direct.individual.single.heart.residualized.png')
-```
-
-```{r}
-write.csv(large.des.toplot.residualized,"tables/analysis/direct.individual.single.heart.residualized.csv")
-```
-
-## Indirect Residualized
-
-```{r}
-large.ies.residualized = heart.ind.frame.residualized[heart.ind.frame.residualized$lhs == 'ie',]
-large.ies.residualized$pvalue_adj = p.adjust(large.ies.residualized$pvalue,'BH')
-```
-
-## Cluster and Display
-
-```{r}
-large.ies.residualized$features = unlist(lapply(large.ies.residualized$mediator, function(x) paste(strsplit(x,'_')[[1]][-1:-2],collapse="_")))
-large.ies.toplot.residualized = merge(large.ies.residualized, clusters, by='features')
-```
-
-```{r}
-large.ies.toplot.residualized$sig = large.ies.toplot.residualized$pvalue_adj < 0.05
-large.ies.toplot.residualized$sig[is.na(large.ies.toplot.residualized$sig)] = FALSE
-ggplot(large.ies.toplot.residualized, aes(x = cluster, y = est.std, fill = cluster)) + 
-  geom_boxplot() + 
-  geom_point(aes(alpha=sig), position = position_jitter(0.1)) + 
-  scale_fill_manual(name = "cluster", 
-                    labels = levels(large.ies.toplot.residualized$nickname), 
-                    values = levels(large.ies.toplot.residualized$cluster)) + 
-  ylab("indirect effect") + 
-  scale_alpha_discrete('significant',labels=c('False','True')) + 
-  scale_y_continuous(breaks=seq(-0.05,0.05,0.05),limits=c(-0.075,0.075)) +
-  theme_classic()+ 
-    theme(
-  axis.title.x = element_blank(),
-  axis.text.x = element_blank(),
-  axis.ticks.x = element_blank())
-ggsave('figures/analysis/indirect.individual.single.heart.residualized.png')
-```
-
-```{r}
-write.csv(large.ies.toplot.residualized,"tables/analysis/indirect.individual.single.heart.residualized.csv")
-```
-
-```{r}
-heart.ind.frame.residualized.final = dplyr::select(heart.ind.frame.residualized, -c('se','z'))
-heart.ind.frame.residualized.final = heart.ind.frame.residualized.final[heart.ind.frame.residualized.final$label != '',]
-write.csv(heart.ind.frame.residualized.final,"tables/final/mediation.individual.single.heart.residualized.csv")
-```

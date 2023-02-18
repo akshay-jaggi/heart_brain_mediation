@@ -26,7 +26,9 @@ vrf.cog.heart.brain.trad = read.csv('data_derived/merged/vrf.cog.heart.brain.tra
 ```
 
 ```{r}
-merged.heart = vrf.cog.heart.brain.trad[,grep("heart_",colnames(vrf.cog.heart.brain.trad))]
+merged.heart = vrf.cog.heart.brain.trad[,
+                                        grepl("heart_",colnames(vrf.cog.heart.brain.trad)) & 
+                                          !grepl("_cmr_",colnames(vrf.cog.heart.brain.trad))]
 ```
 
 # PCA

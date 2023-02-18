@@ -64,16 +64,22 @@ write.csv(gMD.table,"tables/dim_red/gMD_cfa.csv")
 ```
 
 ```{r}
+gMD.tracts = gMD.table[gMD.table$op == '=~',]
+gMD.tracts = gMD.tracts[order(gMD.tracts$rhs),]
+gMD.tracts$rhs = tract.names$name
 gMD.final = 
-  rbind(dplyr::select(gMD.table[gMD.table$op == '=~',],c('rhs','est.std')),
+  rbind(dplyr::select(gMD.tracts,c('rhs','est.std')),
         gMD.metrics.frame)
-write.csv(gMD.final,"tables/final/gMD.cfa.csv")
+```
+
+```{r}
+out = hclust(dist(t(scale(merged.brain.md[,order(colnames(merged.brain.md))]))))
 ```
 
 ```{r}
 brain.md.cor = cor(merged.brain.md[,order(colnames(merged.brain.md))])
-colnames(brain.md.cor) = as.character(tract.names$name)
-heatmap.with.labels(brain.md.cor, min=-1,max=1,'correlation')
+rownames(brain.md.cor) = as.character(tract.names$name)
+heatmap.with.nolabels(brain.md.cor[out$order,out$order], min=-1,max=1,'correlation')
 ggsave('figures/dim_red/md.cor.png')
 ```
 
@@ -116,18 +122,30 @@ write.csv(gFA.table,"tables/dim_red/gFA_cfa.csv")
 ```
 
 ```{r}
+gFA.tracts = gFA.table[gFA.table$op == '=~',]
+gFA.tracts = gFA.tracts[order(gFA.tracts$rhs),]
+gFA.tracts$rhs = tract.names$name
 gFA.final = 
-  rbind(dplyr::select(gFA.table[gFA.table$op == '=~',],c('rhs','est.std')),
+  rbind(dplyr::select(gFA.tracts,c('rhs','est.std')),
         gFA.metrics.frame)
-write.csv(gFA.final,"tables/final/gFA.cfa.csv")
 ```
 
 ```{r}
+gDTI = cbind(gFA.final, gMD.final)
+colnames(gDTI) = c('Tract1', 'FA', 'Tract2','MD')
+gDTI = gDTI[,colnames(gDTI) != 'Tract2']
+write.csv(gDTI,"tables/final/gDTI_cfa.csv")
+```
+
+
+
+```{r}
 brain.fa.cor = cor(merged.brain.fa[,order(colnames(merged.brain.fa))])
-colnames(brain.fa.cor) = as.character(tract.names$name)
-heatmap.with.labels(brain.fa.cor, min=-1,max=1,'correlation')
+rownames(brain.fa.cor) = as.character(tract.names$name)
+heatmap.with.nolabels(brain.fa.cor[out$order,out$order], min=-1,max=1,'correlation')
 ggsave('figures/dim_red/fa.cor.png')
 ```
+
 
 
 # Brain PCA

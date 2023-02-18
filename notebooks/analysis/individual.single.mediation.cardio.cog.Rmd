@@ -1,0 +1,139 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+# Set Up
+```{r setup}
+knitr::opts_knit$set(root.dir = normalizePath("../.."))
+```
+
+# Imports
+```{r}
+library(finalfit)
+library(mice)
+library(purrr)
+library(dplyr)
+library(lavaan)
+library(ggplot2)
+library(gplots)
+source('functions/mediation.R')
+source('functions/med.plots.R')
+```
+
+# Load Data
+```{r}
+latents.covariates.scaled = 
+  read.csv('data_derived/merged/latents.covariates.scaled.csv')
+latents.covariates.residualized.scaled = read.csv('data_derived/merged/latents.covariates.residualized.scaled.csv')
+all.features = 
+  read.csv('data_derived/merged/vrf.cog.heart.brain.trad.healthy.csv')
+```
+
+# Scale Cardio and Cog Features
+```{r}
+cardio.cog = all.features[,grepl('cardio_|cog_',colnames(all.features)) & 
+                            !grepl('prosmem',colnames(all.features))]
+is.nonbinary = sapply(cardio.cog, function(x) !all(x %in% 0:1))
+cardio.cog.scaled = cardio.cog
+cardio.cog.scaled[,is.nonbinary] = scale(cardio.cog.scaled[,is.nonbinary])
+```
+
+```{r}
+latents.covariates.cardio.cog = cbind(latents.covariates.scaled, cardio.cog.scaled)
+latents.covariates.cardio.cog.resid = cbind(latents.covariates.residualized.scaled, cardio.cog.scaled)
+```
+
+# Individual Feature Mediation 
+
+```{r}
+cardio.features = colnames(cardio.cog)[grepl('cardio_',colnames(cardio.cog))]
+cog.features = colnames(cardio.cog)[grepl('cog_',colnames(cardio.cog))]
+mediators = colnames(latents.covariates.scaled)[grepl('latent',colnames(latents.covariates.scaled)) &
+                                                grepl('heart|brain',colnames(latents.covariates.scaled))]
+covariates = c('cov_age', 'cov_sex')
+```
+
+```{r}
+mediation.individual.pairs = mediation.ind.dep.pairs(latents.covariates.cardio.cog, 
+                                                     cardio.features, cog.features, mediators, covariates)
+mediation.individual.pairs.final = process.mediation.results(mediation.individual.pairs)
+```
+
+```{r}
+write.csv(mediation.individual.pairs.final,
+          "tables/final/mediation.individual.pairs.csv")
+```
+
+# Individual Feature Mediation Residualized
+
+```{r}
+mediation.individual.pairs.resid = mediation.ind.dep.pairs(latents.covariates.cardio.cog.resid, 
+                                                     cardio.features, cog.features, mediators, covariates)
+mediation.individual.pairs.resid.final = process.mediation.results(mediation.individual.pairs.resid)
+```
+
+```{r}
+write.csv(mediation.individual.pairs.resid.final,
+          "tables/final/mediation.individual.pairs.resid.csv")
+```
+
+
+```{r}
+for (ind.dep in unique(paste(mediation.individual.pairs.resid.final$independent, mediation.individual.pairs.resid.final$dependent))) {
+  ind.dep = strsplit(ind.dep,' ')[[1]]
+  independent = ind.dep[1]
+  dependent = ind.dep[2]
+  ylims = c(-0.075,0.06)
+  if (independent == 'cardio_whr') {
+    ylims = c(-0.1,0.075)
+  }
+  to.plot = mediation.individual.pairs.resid.final[mediation.individual.pairs.resid.final$independent==independent &
+                                                           mediation.individual.pairs.resid.final$dependent==dependent,]
+  sorting = sort.by.ies(to.plot)
+  plot.obj = direct.indirect.plot(to.plot,sorting, ylims=ylims)
+  print(plot.obj)
+  ggsave(paste(c('figures/analysis/mediation.latent',independent,dependent,'png'),collapse='.'))
+}
+```
+
+# Uncontrolled BMI - VNR
+```{r}
+latents.covariates.cardio.cog$cov_LVM = scale(all.features$heart_cmr_LVM)
+baseline = "heart_latent_pc2 ~ cov_bsa + cov_LVM + cov_age + cov_sex\n"
+baseline.sem = sem(baseline,latents.covariates.cardio.cog)
+baseline.r = lavInspect(baseline.sem,'rsquare')
+experiment = "heart_latent_pc2 ~ cardio_bmi + cov_bsa + cov_LVM + cov_age + cov_sex\n"
+experiment.sem = sem(experiment,latents.covariates.cardio.cog)
+experiment.r = lavInspect(experiment.sem,'rsquare')
+experiment.r - baseline.r
+
+experiment.frame = standardizedsolution(experiment.sem)
+experiment.frame = experiment.frame[experiment.frame$op=="~"|experiment.frame$op==":=",]
+experiment.frame$pvalue_adj = p.adjust(experiment.frame$pvalue,'BH')
+experiment.frame$significant = experiment.frame$pvalue_adj < 0.05
+experiment.frame$model.r = c(experiment.r,rep(NA,4))
+experiment.frame$additional.r = c(experiment.r - baseline.r,rep(NA,4))
+```
+
+
+```{r}
+cardio.features = c('cardio_bmi')
+cog.features = c('cog_vnr')
+mediators = c('heart_latent_pc2')
+covariates = c('cov_age', 'cov_sex')
+```
+
+```{r}
+mediation.individual.bmi.vnr = mediation.ind.dep.pairs(latents.covariates.cardio.cog.resid, 
+                                                     cardio.features, cog.features, mediators, covariates)
+```
+
+```{r}
+colnames(experiment.frame) = colnames(mediation.individual.bmi.vnr)
+write.csv(rbind(experiment.frame, mediation.individual.bmi.vnr),'tables/final/bmi.intensity.exploration.csv')
+```
+
+
+
+
