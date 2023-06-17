@@ -12,6 +12,8 @@ knitr::opts_knit$set(root.dir = normalizePath("../.."))
 ```{r}
 library(finalfit)
 library(mice)
+library(purrr)
+library(dplyr)
 ```
 
 # Load Data
@@ -46,6 +48,16 @@ ff_glimpse(brain.md)
 ff_glimpse(brain.fa)
 ```
 
+# Add in white matter hyperintensities
+```{r}
+brain.wmh = read.csv("data/wmh.csv")
+brain.wmh = data.frame('f.eid' = brain.wmh$f.eid, 'wmh' = brain.wmh$f.25781.2.0)
+```
+
+```{r}
+brain.wmh.final = brain.wmh[complete.cases(brain.wmh),]
+```
+
 # Merge
 ```{r}
 brain.volumes$f.eid = brain.mri$f.eid
@@ -54,7 +66,7 @@ brain.fa$f.eid = brain.mri$f.eid
 ```
 
 ```{r}
-brain.mri.traditional= list(brain.volumes, brain.md,brain.fa) %>% 
+brain.mri.traditional= list(brain.volumes, brain.wmh.final, brain.md, brain.fa) %>% 
   purrr::reduce(inner_join,by="f.eid")
 ```
 
@@ -78,7 +90,8 @@ brain.weighted.means$f.eid = brain.mri$f.eid
 ```
 
 ```{r}
-brain.mri.new = merge(brain.all.volumes, brain.weighted.means, by = 'f.eid')
+brain.mri.new = list(brain.all.volumes, brain.wmh.final, brain.weighted.means) %>% 
+  purrr::reduce(inner_join,by="f.eid")
 ```
 
 # Completeness
@@ -97,7 +110,6 @@ f.eid.tokeep = intersect(brain.mri.trad.final$f.eid, brain.mri.new.final$f.eid)
 brain.mri.trad.matched = brain.mri.trad.final[brain.mri.trad.final$f.eid %in% f.eid.tokeep,]
 brain.mri.new.matched = brain.mri.new.final[brain.mri.new.final$f.eid %in% f.eid.tokeep,]
 ```
-
 
 # Save
 ```{r}

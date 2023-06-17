@@ -46,6 +46,7 @@ direct.indirect.plot = function(plot, sorting, ylims=c(-0.1,0.05)) {
                            "#8796C2FF", # l1
                            "#95AFD0FF", # FA
                            "#A7C6DDFF", # L3
+                           "#7695f0",   # WMH (note consider revising- too blue?)
                            "#7695f0",   # Volume (note consider revising- too blue?)
                            
                            # CARDIAC MRI IDP COLOUR ASSIGNMENTS  -----

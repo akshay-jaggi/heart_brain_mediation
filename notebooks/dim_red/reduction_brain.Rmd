@@ -13,6 +13,7 @@ knitr::opts_knit$set(root.dir = normalizePath("../.."))
 library(lavaan)
 library(semPlot)
 library(factoextra)
+library(RColorBrewer)
 source('functions/heatmaps.custom.R')
 source('functions/explained_variance.R')
 ```
@@ -195,6 +196,7 @@ write.csv(brain.pca$rotation[,1:3],"tables/final/brain.pca.loadings.csv")
 brain.cor = cor(merged.brain.new)
 brain.groups = sapply(colnames(merged.brain.new),function(x) strsplit(x,'_')[[1]][3])
 brain.groups[grepl('volume',colnames(merged.brain.new))] = 'volume'
+brain.groups[grepl('wmh', colnames(merged.brain.new))] = 'wmh'
 brain.groups = factor(brain.groups)
 group.numbers <- as.numeric(brain.groups)
 side.colors <- brewer.pal(10, "Set3")[group.numbers]
@@ -209,6 +211,7 @@ heatmap.with.tree(brain.cor,brain.groups,side.colors)
 brain.latents = data.frame('f.eid'=merged.data.complete$f.eid)
 brain.latents$brain_latent_grey = merged.data.complete$brain_grey
 brain.latents$brain_latent_atrophy = merged.data.complete$brain_atrophy
+brain.latents$brain_latent_wmh = merged.data.complete$brain_wmh
 brain.latents$brain_latent_gMD = predict(gMD_cfa)
 brain.latents$brain_latent_gFA = predict(gfa_cfa)
 brain.latents$brain_latent_pc1 = brain.pca$x[,1]
