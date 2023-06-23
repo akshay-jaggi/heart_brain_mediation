@@ -12,12 +12,15 @@ knitr::opts_knit$set(root.dir = normalizePath("../.."))
 ```{r}
 library(finalfit)
 library(mice)
+library(purrr)
+library(dplyr)
 ```
 
 # Load Data
 ```{r}
 heart.radiomics = read.csv("data/heart.radiomics.csv")
 heart.traditional = read.csv("data/cardio.data.csv")
+heart.bai = read.csv('data/heart.measures.bai.csv')
 ```
 
 # Prep Radiomics Data
@@ -53,18 +56,64 @@ heart.radiomics.touse = heart.radiomics.notdeprecated[,
 heart.traditional = heart.traditional[,grepl('cmr_|f.eid',colnames(heart.traditional))]
 ```
 
-
-# Completeness
+# Prep Bai
 ```{r}
-hist(apply(heart.radiomics.touse, 1, function(x) sum(is.na(x))))
+colnames(heart.bai) = lapply(colnames(heart.bai),function(x) paste('cmr',strsplit(x,'..',fixed=TRUE)[[1]][1],sep='_'))
+colnames(heart.bai)[1] = 'f.eid'
+```
+
+# Match IDs
+```{r}
+heart.bai.complete = heart.bai[complete.cases(heart.bai),]
+heart.traditional.complete = heart.traditional[complete.cases(heart.traditional),]
 ```
 
 ```{r}
-heart.traditional.final = heart.traditional[complete.cases(heart.traditional),]
+dups = duplicated(heart.traditional.complete[,2:ncol(heart.traditional.complete)])
+heart.traditional.unique = heart.traditional.complete[!dups,]
+```
+
+```{r}
+test = heart.bai.complete[,colnames(heart.bai.complete) %in% colnames(heart.traditional.unique)]
+nvars = ncol(heart.traditional.unique)
+```
+
+
+```{r}
+for(i in 1:nrow(test)) {
+  query = test[i,2:nvars]
+  for(j in 1:nrow(heart.traditional.unique)) {
+    source = heart.traditional.unique[j,2:nvars]
+    equality = sum(abs(query - source)) < 0.1
+    if (equality) {
+      print(query)
+      print(source)
+      break
+    }
+  }
+  break
+}
+```
+
+
+```{r}
+test = merge(heart.bai, heart.traditional,by='LVEDV_trunc')
+```
+
+
+# Merge
+```{r}
+
 heart.radiomics.final = heart.radiomics.touse[complete.cases(heart.radiomics.touse),]
-heart.imaging.final = merge(heart.radiomics.final, heart.traditional.final,by='f.eid')
+heart.imaging.final = merge(heart.bai.final, heart.radiomics.final,by='f.eid')
 heart.imaging.final = heart.imaging.final %>% dplyr::select(f.eid, everything())
 ```
+
+```{r}
+feids.shared = intersect(heart.radiomics.final$f.eid, heart.bai.final$f.eid)
+write.csv(feids.shared,'data/heart.feids.shared.csv')
+```
+
 
 # Save
 ```{r}
