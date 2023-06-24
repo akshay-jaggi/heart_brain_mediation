@@ -27,8 +27,7 @@ vrf.cog.heart.brain.trad = read.csv('data_derived/merged/vrf.cog.heart.brain.tra
 
 ```{r}
 merged.heart = vrf.cog.heart.brain.trad[,
-                                        grepl("heart_",colnames(vrf.cog.heart.brain.trad)) & 
-                                          !grepl("_cmr_",colnames(vrf.cog.heart.brain.trad))]
+                                        grepl("heart_",colnames(vrf.cog.heart.brain.trad))]
 ```
 
 # PCA
@@ -83,7 +82,7 @@ write.csv(heart.pca$rotation[,1:3],"tables/final/heart.pca.loadings.csv")
 ```{r}
 heart.cor = cor(merged.heart)
 heart.groups = sapply(colnames(merged.heart),function(x) strsplit(x,'_')[[1]][2])
-heart.groups = factor(heart.groups, levels = c("shape","intensity","texture"))
+heart.groups = factor(heart.groups, levels = c('cmr',"shape","intensity","texture"))
 group.numbers <- as.numeric(heart.groups)
 side.colors <- brewer.pal(9, "Set1")[group.numbers]
 #png(file = 'figures/dim_red/heart.cor.png',width=1200,height=800)

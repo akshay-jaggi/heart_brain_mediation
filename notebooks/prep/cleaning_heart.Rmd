@@ -74,44 +74,36 @@ heart.traditional.unique = heart.traditional.complete[!dups,]
 ```
 
 ```{r}
-test = heart.bai.complete[,colnames(heart.bai.complete) %in% colnames(heart.traditional.unique)]
-nvars = ncol(heart.traditional.unique)
+trunc <- function(x, ..., prec = 0) base::trunc(x * 10^prec, ...) / 10^prec;
 ```
 
-
 ```{r}
-for(i in 1:nrow(test)) {
-  query = test[i,2:nvars]
-  for(j in 1:nrow(heart.traditional.unique)) {
-    source = heart.traditional.unique[j,2:nvars]
-    equality = sum(abs(query - source)) < 0.1
-    if (equality) {
-      print(query)
-      print(source)
-      break
-    }
-  }
-  break
-}
+# Create Unique IDs
+heart.traditional.unique$new_id = 
+  apply(heart.traditional.unique[,c(2,6,7)], 1, function(x) paste(trunc(x, prec=2),collapse=''))
+heart.bai.complete$new_id = 
+  apply(heart.bai.complete[,c(2,7,8)], 1, function(x) paste(trunc(x, prec=2),collapse=''))
+# Test if ID is unique
+length(unique(heart.traditional.unique$new_id))/length(heart.traditional.unique$new_id)
+length(unique(heart.bai.complete$new_id))/length(heart.bai.complete$new_id)
 ```
 
+```{r}
+heart.merged = merge(heart.traditional.unique, heart.bai.complete, by='new_id')
+```
 
 ```{r}
-test = merge(heart.bai, heart.traditional,by='LVEDV_trunc')
+heart.merged.bai = heart.merged[,!grepl('new_id|.x|f.eid.y',colnames(heart.merged))]
+heart.merged.bai$f.eid = heart.merged$f.eid.x
+colnames(heart.merged.bai) = lapply(colnames(heart.merged.bai),function(x) strsplit(x,'.y',fixed=TRUE)[[1]][1])
 ```
 
 
 # Merge
 ```{r}
-
 heart.radiomics.final = heart.radiomics.touse[complete.cases(heart.radiomics.touse),]
-heart.imaging.final = merge(heart.bai.final, heart.radiomics.final,by='f.eid')
+heart.imaging.final = merge(heart.merged.bai, heart.radiomics.final,by='f.eid')
 heart.imaging.final = heart.imaging.final %>% dplyr::select(f.eid, everything())
-```
-
-```{r}
-feids.shared = intersect(heart.radiomics.final$f.eid, heart.bai.final$f.eid)
-write.csv(feids.shared,'data/heart.feids.shared.csv')
 ```
 
 

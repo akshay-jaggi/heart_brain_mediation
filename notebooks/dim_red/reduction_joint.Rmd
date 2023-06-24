@@ -24,8 +24,7 @@ merged.data.complete.new = read.csv('data_derived/merged/vrf.cog.heart.brain.new
 ```
 
 ```{r}
-merged.heart = merged.data.complete.new[,grepl("heart_",colnames(merged.data.complete.new)) & 
-                                          !grepl("_cmr_",colnames(merged.data.complete.new))]
+merged.heart = merged.data.complete.new[,grepl("heart_",colnames(merged.data.complete.new))]
 merged.brain = merged.data.complete.new[,grepl("brain_",colnames(merged.data.complete.new))]
 ```
 
