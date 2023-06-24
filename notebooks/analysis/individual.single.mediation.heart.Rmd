@@ -43,7 +43,7 @@ clusters = read.csv('data/heart.radiomics.clustering.csv')
 clusters$type = factor(clusters$type, 
                            levels = 
                              c("Size", "Local Uniformity", "Global Variance", 
-                               "Shape", "Local Dimness", "Global Intensity","Traditional"))
+                               "Shape", "Local Dimness", "Global Intensity","Bai"))
 ```
 
 # Scale and Residualize Heart Features

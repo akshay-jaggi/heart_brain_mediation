@@ -83,7 +83,7 @@ Heart_Brain_mediation_plot  <- Heart_Brain_mediation_plot  %>%
                                 "Local Uniformity",
                                 "Shape",
                                 "Size",
-                                "Traditional",
+                                "Bai",
                                 "Local Dimness",
                                 "Global Intensity"))
 
@@ -101,6 +101,8 @@ Heart_Brain_mediation_plot$mediator <- as.factor(Heart_Brain_mediation_plot$medi
 # Boxplot -----
 pd = position_dodge(width = 0.5)
 
+Heart_Brain_mediation_plot = Heart_Brain_mediation_plot[Heart_Brain_mediation_plot$type != 'NA',]
+Heart_Brain_mediation_plot = Heart_Brain_mediation_plot[Heart_Brain_mediation_plot$label != 'NA',]
 heart_brain_plot_obj = Heart_Brain_mediation_plot %>%
   ggplot(aes(x = est.std, y = type)) +
   stat_boxplot(
