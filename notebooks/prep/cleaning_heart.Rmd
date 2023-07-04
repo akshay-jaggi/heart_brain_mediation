@@ -93,6 +93,36 @@ heart.merged = merge(heart.traditional.unique, heart.bai.complete, by='new_id')
 ```
 
 ```{r}
+heart.filtered = heart.merged[,!grepl('new_id|.x|f.eid.y',colnames(heart.merged))]
+heart.filtered$f.eid.old = heart.merged$f.eid.x
+heart.filtered$f.eid.new = heart.merged$f.eid.y
+colnames(heart.filtered) = lapply(colnames(heart.filtered),function(x) strsplit(x,'.y',fixed=TRUE)[[1]][1])
+heart.filtered = heart.filtered %>% dplyr::select(f.eid.new, everything())
+heart.filtered = heart.filtered %>% dplyr::select(f.eid.old, everything())
+```
+
+```{r}
+write.csv(heart.filtered, 'data/ukbb_cmr_key.csv',row.names = FALSE)
+```
+
+
+```{r}
+low.intensity = c(3683200, 4021135, 1964022, 4765773, 3945940, 2181874)
+high.intensity = c(2160815, 3363346, 2650040, 3843451, 3909427)
+```
+
+```{r}
+slice.low = heart.filtered[heart.filtered$f.eid.old %in% low.intensity[low.intensity %in% heart.filtered$f.eid.old],]
+slice.high = 
+  heart.filtered[heart.filtered$f.eid.old %in% high.intensity[high.intensity %in% heart.filtered$f.eid.old],]
+```
+
+```{r}
+heart.selected = rbind(slice.low,slice.high)
+write.csv(heart.selected, 'data/ukbb_cmr_key_todownload.csv',row.names = FALSE)
+```
+
+```{r}
 heart.merged.bai = heart.merged[,!grepl('new_id|.x|f.eid.y',colnames(heart.merged))]
 heart.merged.bai$f.eid = heart.merged$f.eid.x
 colnames(heart.merged.bai) = lapply(colnames(heart.merged.bai),function(x) strsplit(x,'.y',fixed=TRUE)[[1]][1])
