@@ -22,7 +22,7 @@ source('functions/mediation.R')
 
 ```{r}
 get.brain.feature.type = function(name) {
-  if(grepl('volume',name)) {
+  if(grepl('volume|wmh',name)) {
     return('volume')
   } else {
     return(strsplit(name,'_')[[1]][3])
