@@ -122,16 +122,26 @@ cardio.features = c('cardio_bmi')
 cog.features = c('cog_vnr')
 mediators = c('heart_latent_pc2')
 covariates = c('cov_age', 'cov_sex')
-```
-
-```{r}
 mediation.individual.bmi.vnr = mediation.ind.dep.pairs(latents.covariates.cardio.cog.resid, 
                                                      cardio.features, cog.features, mediators, covariates)
+mediation.individual.bmi.vnr.final = process.mediation.results(mediation.individual.bmi.vnr)
 ```
 
 ```{r}
-colnames(experiment.frame) = colnames(mediation.individual.bmi.vnr)
-write.csv(rbind(experiment.frame, mediation.individual.bmi.vnr),'tables/final/bmi.intensity.exploration.csv')
+cardio.features = c('cardio_latent_gvrf')
+cog.features = c('cog_latent_g')
+mediators = c('heart_latent_pc2')
+covariates = c('cov_age', 'cov_sex','cardio_bmi')
+mediation.control = mediation.ind.dep.pairs(latents.covariates.cardio.cog.resid, 
+                                                     cardio.features, cog.features, mediators, covariates)
+mediation.control.final = process.mediation.results(mediation.control)
+```
+
+```{r}
+colnames(experiment.frame) = colnames(mediation.individual.bmi.vnr.final)
+colnames(mediation.control.final) = colnames(mediation.individual.bmi.vnr.final)
+stacked = rbind(rbind(experiment.frame, mediation.individual.bmi.vnr.final),mediation.control.final)
+write.csv(stacked,'tables/final/bmi.intensity.exploration.csv')
 ```
 
 

@@ -196,12 +196,12 @@ write.csv(brain.pca$rotation[,1:3],"tables/final/brain.pca.loadings.csv")
 brain.cor = cor(merged.brain.new)
 brain.groups = sapply(colnames(merged.brain.new),function(x) strsplit(x,'_')[[1]][3])
 brain.groups[grepl('volume',colnames(merged.brain.new))] = 'volume'
-brain.groups[grepl('wmh', colnames(merged.brain.new))] = 'wmh'
+brain.groups[grepl('wmh', colnames(merged.brain.new))] = 'volume'
 brain.groups = factor(brain.groups)
 group.numbers <- as.numeric(brain.groups)
 side.colors <- brewer.pal(10, "Set3")[group.numbers]
+png(file = 'figures/dim_red/brain.cor.png',width=1200,height=1000)
 heatmap.with.tree(brain.cor,brain.groups,side.colors)
-#ggsave('figures/dim_red/brain.cor.png')
 ```
 
 

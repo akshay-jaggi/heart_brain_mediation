@@ -87,7 +87,7 @@ ggsave('figures/analysis/mediation.latent.single.png')
 ```{r}
 independent.variable = 'cardio_latent_gvrf'
 dependent.variable   = 'cog_latent_g'
-mediators = c('heart_latent_cc2')
+mediators = c('heart_latent_pc2')
 covariates = c('cov_age', 'cov_sex', 'heart_latent_pc2', 'brain_latent_grey','brain_latent_atrophy')
 ```
 
